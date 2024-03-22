@@ -1,0 +1,15 @@
+linters:
+ enable:
+    - bodyclose
+    - asasalint
+    - bidichk
+    - containedctx
+    - cyclop
+    - unused
+    - dogsled
+    # - dupl
+    - durationcheck
+    - errchkjson
+    - errname
+    - errorlint
+   #  - goconst

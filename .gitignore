@@ -1,0 +1,6 @@
+cmd/main
+go.mod
+go.sum
+.env
+stories-front
+files
