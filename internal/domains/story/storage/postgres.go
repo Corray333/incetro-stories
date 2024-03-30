@@ -1,7 +1,9 @@
 package storage
 
 import (
-	"github.com/Corray333/stories/internal/domains/story/types"
+	"time"
+
+	"github.com/Corray333/univer_cs/internal/domains/story/types"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -11,13 +13,14 @@ type Storage struct {
 }
 
 // New creates a new storage and tables
-func NewStorage(db *sqlx.DB) (*Storage, error) {
+func NewStorage(db *sqlx.DB) (Storage, error) {
 
 	_, err := db.Query(`
 		CREATE TABLE IF NOT EXISTS public.stories
 		(
 			stories_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
 			created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			creator bigint NOT NULL,
 			CONSTRAINT stories_pkey PRIMARY KEY (stories_id)
 		);
 		CREATE TABLE IF NOT EXISTS public.banners
@@ -57,7 +60,7 @@ func NewStorage(db *sqlx.DB) (*Storage, error) {
 				ON DELETE NO ACTION
 		);
 	`)
-	return &Storage{db: db}, err
+	return Storage{db: db}, err
 }
 
 // InsertBanner inserts a new banner into the database and returns the id
@@ -88,8 +91,8 @@ func (s *Storage) InsertBanner(storyId string, banner types.Banner) (int64, erro
 func (s *Storage) InsertStory(story types.Story) (int64, error) {
 	var id int64
 	rows, err := s.db.Queryx(`
-		INSERT INTO stories (created_at) VALUES (CURRENT_TIMESTAMP) RETURNING stories_id;
-	`)
+		INSERT INTO stories (created_at, creator) VALUES (CURRENT_TIMESTAMP, $1) RETURNING stories_id;
+	`, story.Creator)
 	if err != nil {
 		return -1, err
 	}
@@ -112,11 +115,12 @@ func (s *Storage) SelectStories(filters string) ([]types.Story, error) {
 		Description     string `db:"description"`
 		StoryCreatedAt  string `db:"story_created_at"`
 		BannerCreatedAt string `db:"banner_created_at"`
+		Creator         int64  `db:"creator"`
 		UserID          int64  `db:"user_id"`
 	}
 
 	rows, err := s.db.Queryx(`
-	SELECT stories.stories_id, banners.banner_id, banners.name AS banner_name, description, stories.created_at AS story_created_at, banners.created_at AS banner_created_at
+	SELECT stories.stories_id, banners.banner_id, banners.name AS banner_name, description, stories.created_at AS story_created_at, banners.created_at AS banner_created_at, stories.creator
 	FROM stories_banner INNER JOIN banners ON banners.banner_id = stories_banner.banner_id 
 	INNER JOIN stories ON stories.stories_id = stories_banner.stories_id ` + filters + ";")
 	if err != nil {
@@ -130,9 +134,8 @@ func (s *Storage) SelectStories(filters string) ([]types.Story, error) {
 		}
 		var story types.Story
 		story.ID = r.StoriesID
+		story.Creator = r.Creator
 		story.CreatedAt = r.StoryCreatedAt
-		// story.Name = r.StoriesName
-		// story.UserID = r.UserID
 		banner := types.Banner{
 			ID:          r.BannerID,
 			Name:        r.BannerName,
@@ -155,6 +158,50 @@ func (s *Storage) InsertView(user_id int64, banner_id string) error {
 	_, err := s.db.Queryx(`
 		INSERT INTO views VALUES ($1, $2);
 	`, user_id, banner_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateBannerMedia updates the media url of the banner
+func (s *Storage) UpdateBannerMedia(bannerId string, mediaURL string) error {
+	_, err := s.db.Queryx(`
+		UPDATE banners SET media = $1 WHERE banner_id = $2;
+	`, mediaURL, bannerId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateBannerName updates the name of the banner
+func (s *Storage) UpdateBannerName(bannerId string, name string) error {
+	_, err := s.db.Queryx(`
+		UPDATE banners SET name = $1 WHERE banner_id = $2;
+	`, name, bannerId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateBannerDescription updates the description of the banner
+func (s *Storage) UpdateBannerDescription(bannerId string, description string) error {
+	_, err := s.db.Queryx(`
+		UPDATE banners SET description = $1 WHERE banner_id = $2;
+	`, description, bannerId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateBannerTimestamp updates the timestamp of the banner
+func (s *Storage) UpdateBannerTimestamp(bannerId string, timestamp time.Time) error {
+	_, err := s.db.Queryx(`
+		UPDATE stories SET expires_at = $1 WHERE banner_id = $2;
+	`, timestamp.String(), bannerId)
 	if err != nil {
 		return err
 	}

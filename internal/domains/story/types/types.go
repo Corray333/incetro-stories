@@ -12,4 +12,5 @@ type Story struct {
 	ID        int64    `json:"id,omitempty" db:"stories_id"`
 	CreatedAt string   `json:"created_at,omitempty" db:"created_at"`
 	Banners   []Banner `json:"banners,omitempty" db:"banners"`
+	Creator   int64    `json:"creator,omitempty" db:"creator"`
 }

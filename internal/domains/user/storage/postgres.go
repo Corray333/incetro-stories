@@ -3,8 +3,8 @@ package storage
 import (
 	"fmt"
 
-	"github.com/Corray333/stories/internal/domains/user/types"
-	"github.com/Corray333/stories/pkg/server/auth"
+	"github.com/Corray333/univer_cs/internal/domains/user/types"
+	"github.com/Corray333/univer_cs/pkg/server/auth"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -17,20 +17,21 @@ type Storage struct {
 func NewStorage(db *sqlx.DB) (*Storage, error) {
 
 	_, err := db.Query(`
-		CREATE TABLE IF NOT EXISTS public.users
+		CREATE TABLE IF NOT EXISTS users
 		(
 			user_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
 			name text COLLATE pg_catalog."default" NOT NULL,
 			email text COLLATE pg_catalog."default" NOT NULL,
 			password character varying(60) COLLATE pg_catalog."default" NOT NULL,
+			avatar text COLLATE pg_catalog."default",
 			CONSTRAINT users_pkey PRIMARY KEY (user_id),
 			CONSTRAINT users_email_key UNIQUE (email)
 		);
-		CREATE TABLE IF NOT EXISTS public.user_token
+		CREATE TABLE IF NOT EXISTS user_token
 		(
 			user_id bigint NOT NULL,
 			token text NOT NULL,
-			PRIMARY KEY (token, user_id),
+			PRIMARY KEY (user_id),
 			FOREIGN KEY (user_id)
 				REFERENCES public.users (user_id) MATCH SIMPLE
 				ON UPDATE NO ACTION
@@ -51,7 +52,7 @@ func (s *Storage) InsertUser(user types.User) (int64, string, error) {
 
 	rows := s.db.QueryRow(`
 		INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING user_id;
-	`, user.Name, user.Email, user.Password)
+	`, user.Username, user.Email, user.Password)
 
 	if err := rows.Scan(&user.ID); err != nil {
 		return -1, "", err
@@ -127,7 +128,7 @@ func (s *Storage) CheckAndUpdateRefresh(id int64, refresh string) (string, error
 	return newRefresh, nil
 }
 
-func (s *Storage) SelectUser(id int64) (types.User, error) {
+func (s *Storage) SelectUser(id string) (types.User, error) {
 	var user types.User
 	rows, err := s.db.Queryx(`
 		SELECT * FROM users WHERE user_id = $1;
@@ -138,8 +139,19 @@ func (s *Storage) SelectUser(id int64) (types.User, error) {
 	if !rows.Next() {
 		return user, fmt.Errorf("user not found")
 	}
-	if err := rows.Scan(&user); err != nil {
+	if err := rows.StructScan(&user); err != nil {
 		return user, err
 	}
+	user.Password = ""
 	return user, nil
+}
+
+func (s *Storage) UpdateUser(user types.User) error {
+	fmt.Println()
+	fmt.Println(user)
+	fmt.Println()
+	_, err := s.db.Queryx(`
+		UPDATE users SET username = $1, email = $2, avatar = $3 WHERE user_id = $4;
+	`, user.Username, user.Email, user.Avatar, user.ID)
+	return err
 }

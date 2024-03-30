@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/Corray333/stories/internal/app"
-	"github.com/Corray333/stories/internal/config"
+	"github.com/Corray333/univer_cs/internal/app"
+	"github.com/Corray333/univer_cs/internal/config"
 )
 
 func main() {

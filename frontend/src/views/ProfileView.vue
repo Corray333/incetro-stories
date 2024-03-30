@@ -1,23 +1,121 @@
 <script setup>
-import {useRouter} from 'vue-router'
 import { Icon } from '@iconify/vue'
+import {ref, onBeforeMount} from 'vue'
+import { jwtDecode } from "jwt-decode"
+import axios from 'axios'
 
-const router = useRouter()
+function getCookie(name) {
+ const value = `; ${document.cookie}`;
+ const parts = value.split(`; ${name}=`);
+ if (parts.length === 2) return parts.pop().split(';').shift();
+}
 
-const logout = ()=>{
-    document.cookie="Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-    document.cookie="Refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-    router.push('/login')
+const avatarUrl = ref('')
+
+const changed = ref(false)
+
+const refreshTokens = async()=>{
+    try {
+        let {data} = await axios.get('http://localhost:3001/users/refresh', {
+            headers:{
+                'Refresh': getCookie('Refresh'),
+            }
+        })
+
+        document.cookie = `Authorization=${data.authorization};`
+        document.cookie = `Refresh=${data.refresh};`
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+const user = ref({})
+
+const loadUserInfo = async ()=>{
+    try {
+        let uid = jwtDecode(getCookie('Authorization')).id
+        console.log(uid)
+        let {data} = await axios.get(`http://localhost:3001/users/${uid}`, {
+            headers:{
+                'Authorization': getCookie('Authorization'),
+            }
+        })
+        
+        user.value = data.user
+    } catch (error) {
+        if (error.response.status == 401){
+            await refreshTokens()
+            loadUserInfo()
+        }
+        else console.log(error)
+    }
+}
+
+onBeforeMount(()=>{
+    loadUserInfo()
+})
+
+const file = ref(null)
+
+const handleFileUpload = (event) => {
+    console.log('test')
+    if (event.target.files[0].size > 500*1024) {
+        fileMsg.value = "File is too large"
+        return
+    }
+    file.value = event.target.files[0]
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+        avatarUrl.value = e.target.result
+    }
+    reader.readAsDataURL(event.target.files[0])
+}
+
+const saveChanges = async ()=>{
+    const formData = new FormData()
+    if (file.value != null) formData.append('avatar', file.value)
+    formData.append('username', user.value.username)
+
+    try{
+        let url = "http://localhost:3001/users/" + jwtDecode(getCookie('Authorization')).id
+        await axios.put(url, formData, {
+            headers: {
+                'Content-Type':'multipart/form-data',
+                'Authorization': getCookie("Authorization")
+            }
+        })
+        location.reload()
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 </script>
 
 <template>
-    <section>
-       <div class="header w-full flex justify-center text-gray-900 relative items-center">
-        <h1 class="title">Profile</h1>
-        <button @click="logout" class="button w-min absolute right-0 text-2xl"><Icon icon="mdi:logout" /></button>
-       </div> 
+    <section class="flex flex-col gap-5 items-center">
+       <h1 class="title">Profile</h1>
+       <div class="profile_card flex gap-5 bg-gray-900 rounded-xl p-5">
+            <div class="profile_photo relative">
+                <input @input="changed=true" type="file" id="fileInput" class="hidden" @change="handleFileUpload" />
+                <label for="fileInput" class="text-center absolute mx-auto bg-gray-900 bg-opacity-80 h-full w-full rounded-full flex items-center justify-center text-5xl text-green-400 opacity-0 duration-300 cursor-pointer border-green-400 border-8 hover:opacity-100">
+                    <Icon icon="mdi:user" />
+                </label>
+                <img :src="file ? avatarUrl: user.avatar" alt="" class="w-48 h-48 rounded-full object-cover border-white border-8">
+            </div>
+            <div class="profile_info flex flex-col gap-2">
+                <input @input="changed=true" type="text" v-model="user.username" class="text-input">
+                <input @input="changed=true" type="text" v-model="user.email" class="text-input" disabled>
+                <button @click="saveChanges" class="button" :class="changed ? '':'disabled'">Save</button>
+            </div>
+       </div>
     </section>
 </template>
+
+<style>
+
+
+
+</style>
 

@@ -28,9 +28,6 @@ func NewMiddleware() func(next http.Handler) http.Handler {
 		slog.Info("auth middleware enabled")
 
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println()
-			fmt.Println(r.Header.Get("Authorization"))
-			fmt.Println()
 			if err := VerifyToken(r.Header.Get("Authorization")); err != nil {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				slog.Error("Unauthorized: " + err.Error())

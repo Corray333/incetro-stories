@@ -1,4 +1,5 @@
 <script setup>
+import { Icon } from '@iconify/vue'
 import {ref} from 'vue'
 import {useRouter} from 'vue-router'
 
@@ -10,6 +11,35 @@ const action = ref("Log in")
 const username = ref("")
 const email = ref("")
 const password = ref("")
+
+const passwordRequirements = ref([
+    {text: "contain ≥ 8 charachters", valid: false},
+    {text: "contain 1 digit", valid: false},
+    {text: "contain 1 uppercase letter", valid: false},
+    {text: "contain 1 lowercase letter", valid: false},
+])
+
+const checkPassword = ()=>{
+    passwordRequirements.value[0].valid = password.value.length >= 8
+    passwordRequirements.value[1].valid = /\d/.test(password.value)
+    passwordRequirements.value[2].valid = /[A-Z]/.test(password.value)
+    passwordRequirements.value[3].valid = /[a-z]/.test(password.value)
+}
+const emailRequirements = ref([
+    {text: "contain @ symbol", valid: false},
+    {text: "contain . symbol", valid: false},
+    {text: "contain only one @ symbol", valid: false},
+    {text: "contain at least one character before and after @", valid: false},
+    {text: "contain at least two characters after . (dot)", valid: false},
+])
+
+const checkEmail = ()=>{
+    emailRequirements.value[0].valid = /@/.test(email.value);
+    emailRequirements.value[1].valid = /\./.test(email.value);
+    emailRequirements.value[2].valid = (email.value.match(/@/g) || []).length === 1;
+    emailRequirements.value[3].valid = /^[^@]*@[^@]*$/.test(email.value);
+    emailRequirements.value[4].valid = /[^@]*\.[^\.]*$/.test(email.value) && email.value.split('.').pop().length >= 2;
+}
 
 const login = async ()=>{
     try {
@@ -31,9 +61,9 @@ const login = async ()=>{
             document.cookie = `Refresh=${data.refresh};`
             router.push('/home')
         }
-        else alert("Invalid action")
+        else console.log("Invalid action")
     } catch (error) {
-        alert(error)   
+        console.log(error)   
     }
 }
 
@@ -49,8 +79,27 @@ const login = async ()=>{
             </span>
             <h1 class="font-bold text-xl">{{ action }}</h1>
             <input v-if="action=='Sign up'" v-model="username" class="text-input" type="text" name="" id="" placeholder="username">
-            <input class="text-input" v-model="email" type="text" name="" id="" placeholder="email">
-            <input class="text-input" v-model="password" type="password" name="" id="" placeholder="password">
+            <div class="input_box relative flex items-center group">
+                <input @input="checkEmail" class="text-input" v-model="email" type="text" name="" id="" placeholder="email">
+                <div class="input_tip flex items-center gap-2 group-focus-within:scale-100">
+                    <Icon icon="mdi:bulb" class="text-green-400 text-4xl" />
+                    <ul class="list-disc list-inside">
+                        <strong>Email must:</strong>
+                        <li v-for="(req, i) of emailRequirements" :key="i" :class="req.valid?'text-green-400':''">{{ req.text }}</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="input_box relative flex items-center group">
+                <input @input="checkPassword" class="text-input" v-model="password" type="password" name="" id="" placeholder="password">
+                <div class="input_tip flex items-center gap-2 group-focus-within:scale-100">
+                    <Icon icon="mdi:bulb" class="text-green-400 text-2xl" />
+                    <ul class="list-disc list-inside">
+                        <strong>Password must:</strong>
+                        <li v-for="(req, i) of passwordRequirements" :key="i" :class="req.valid?'text-green-400':''">{{ req.text }}</li>
+                    </ul>
+                </div>
+            </div>
             <button type="button" class="button uppercase" @click="login">{{ action }}</button>
         </section>
     </section>

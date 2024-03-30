@@ -4,7 +4,7 @@ linters:
     - asasalint
     - bidichk
     - containedctx
-    - cyclop
+   #  - cyclop
     - unused
     - dogsled
     # - dupl

@@ -10,7 +10,7 @@ import (
 )
 
 func Connect() (*sqlx.DB, error) {
-	db, err := sqlx.Connect("postgres", os.Getenv("POSTGRES_CONNSTR"))
+	db, err := sqlx.Connect("postgres", os.Getenv("DB_CONNSTR"))
 	if err != nil {
 		log.Fatal(err)
 	}
