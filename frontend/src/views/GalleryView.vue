@@ -3,6 +3,7 @@ import NewBanner from '../components/NewBanner.vue'
 import {ref,onBeforeMount} from 'vue'
 import { Icon } from '@iconify/vue'
 import StoryCardEdit from '../components/StoryCardEdit.vue'
+import StoryModalEdit from '../components/StoryModalEdit.vue'
 import { jwtDecode } from "jwt-decode"
 import axios from 'axios'
 
@@ -65,6 +66,8 @@ const loadContent = async ()=>{
     }
 }
 
+const storyPick = ref(null)
+
 onBeforeMount(()=>{
     loadContent()
 })
@@ -73,6 +76,9 @@ onBeforeMount(()=>{
 
 <template>
     <section class="flex flex-col gap-5">
+        <transition>
+            <StoryModalEdit v-if="storyPick" :story="storyPick" @close="storyPick = null"/>
+        </transition>
         <Transition>
             <NewBanner v-if="newBannerOpened" :story_id="storyId" @close="closeNewBanner" @reload="loadContent"/>
         </Transition>
@@ -81,7 +87,7 @@ onBeforeMount(()=>{
         <button class="button w-fit" @click="newBannerOpened = true"><Icon icon="mdi:plus" /></button>
        </div> 
        <div class="stories grid grid-cols-4 gap-5 w-full">
-            <StoryCardEdit @new-in-story="pickStory" v-for="(story, i) of stories" :key="i" :story="story" />
+            <StoryCardEdit @new-in-story="pickStory" v-for="(story, i) of stories" :key="i" :story="story" @pickStory="storyPick=story"/>
         </div>
     </section>
 </template>

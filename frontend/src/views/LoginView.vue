@@ -6,6 +6,8 @@ import {useRouter} from 'vue-router'
 const router = useRouter()
 import axios from 'axios'
 
+let loading = ref(false)
+
 const action = ref("Log in")
 
 const username = ref("")
@@ -38,11 +40,20 @@ const checkEmail = ()=>{
     emailRequirements.value[1].valid = /\./.test(email.value);
     emailRequirements.value[2].valid = (email.value.match(/@/g) || []).length === 1;
     emailRequirements.value[3].valid = /^[^@]*@[^@]*$/.test(email.value);
-    emailRequirements.value[4].valid = /[^@]*\.[^\.]*$/.test(email.value) && email.value.split('.').pop().length >= 2;
+    emailRequirements.value[4].valid = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email.value) && email.value.split('.').pop().length >= 2;
 }
 
 const login = async ()=>{
+    loading.value = true
     try {
+        let valid = true
+        for (let i = 0; i < passwordRequirements.value.length; i++) valid = valid & passwordRequirements.value[i].valid
+        for (let i = 0; i < emailRequirements.value.length; i++) valid = valid & emailRequirements.value[i].valid
+        if (!valid) {
+            alert("Введите корректные данные!")
+            loading.value = false
+            return
+        }
         if (action.value == "Log in"){
             let {data} = await axios.post('http://localhost:3001/users/login', {
                 email: email.value,
@@ -63,7 +74,8 @@ const login = async ()=>{
         }
         else console.log("Invalid action")
     } catch (error) {
-        console.log(error)   
+        loading.value = false
+        alert("Вход не выполнен")   
     }
 }
 
@@ -100,7 +112,10 @@ const login = async ()=>{
                     </ul>
                 </div>
             </div>
-            <button type="button" class="button uppercase" @click="login">{{ action }}</button>
+            <button type="button" class="button uppercase flex justify-center hover:text-gray-900 text-sm" @click="login">
+                <Icon v-if="loading" icon="line-md:loading-loop" />
+                <p v-else>{{ action }}</p>
+            </button>
         </section>
     </section>
 </template>

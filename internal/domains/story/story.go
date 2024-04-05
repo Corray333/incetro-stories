@@ -24,6 +24,7 @@ func Init(db *sqlx.DB, router *chi.Mux) error {
 		subRouter.Post("/stories/views", transport.NewView(store))
 
 		subRouter.Post("/banners/{id}/media", transport.UpdateBannerMedia(store))
+		subRouter.Put("/banners/{id}", transport.UpdateBanner(store))
 		subRouter.Post("/story/{id}/timestamp", transport.UpdateStoryTimestamp(store))
 		subRouter.Post("/banners/{id}/name", transport.UpdateBannerName(store))
 		subRouter.Post("/banners/{id}/description", transport.UpdateBannerDescription(store))

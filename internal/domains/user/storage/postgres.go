@@ -51,8 +51,8 @@ func (s *Storage) InsertUser(user types.User) (int64, string, error) {
 	user.Password = passHash
 
 	rows := s.db.QueryRow(`
-		INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING user_id;
-	`, user.Username, user.Email, user.Password)
+		INSERT INTO users (username, email, password, avatar) VALUES ($1, $2, $3, $4) RETURNING user_id;
+	`, user.Username, user.Email, user.Password, "http://localhost:3001/images/avatars/default_avatar.png")
 
 	if err := rows.Scan(&user.ID); err != nil {
 		return -1, "", err

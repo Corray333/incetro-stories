@@ -39,6 +39,26 @@ onBeforeMount(()=>{
     loadUserInfo()
 })
 
+const updateBanner = async (id) =>{
+    try {
+        await axios.put(`http://localhost:3001/banners/${props.story.banners[id].id}`,{
+            name: props.story.banners[id].name,
+            description: props.story.banners[id].description,
+        }, {
+            headers:{
+                'Authorization': getCookie('Authorization'),
+            }
+        })
+        location.reload()
+    } catch (error) {
+        if (error.status == 401){
+            await refreshTokens()
+            loadUserInfo()
+        }
+        else console.log(error)
+    }
+}
+
 
 </script>
 
@@ -60,12 +80,13 @@ onBeforeMount(()=>{
                         </div>
                     </div>
                 </div>
-                <div class="story_info flex p-5 gap-5 overflow-y-auto">
+                <div class="story_info flex p-5 gap-5 overflow-y-auto relative">
                     <img :src="user.avatar" alt="" class="w-16 h-16 object-cover rounded-full">
                     <div class=" h-full flex flex-col rounded-xl">
-                        <router-link :to="`/users/${story.creator}`" class="duration-300 hover:text-green-400"><i class="opacity-50 text-xs">{{ user.username }}</i></router-link>
-                        <h2 class="font-bold text-xl">{{ story.banners[current].name }}</h2>
-                        <p v-html="story.banners[current].description"></p>
+                        <i class="opacity-50 text-xs">{{ user.username }}</i>
+                        <input class="font-bold text-xl" v-model="story.banners[current].name">
+                        <textarea class="text-input text-black w-full" rows="20" v-model="story.banners[current].description"></textarea>
+                        <button class="button absolute bottom-0 right-0 m-5 w-fit px-5" @click="updateBanner(current)">Save</button>
                     </div>
                 </div>
             </div>

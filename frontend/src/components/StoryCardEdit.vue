@@ -12,7 +12,10 @@ const hovered = ref(false)
 
 <template>
     <section @mouseenter="hovered = true" @mouseleave="hovered = false" class="w-full relative overflow-hidden rounded-xl">
-        <button @click="$emit('newInStory', story.id)" class="button w-min absolute right-0 text-2xl z-30"><Icon icon="mdi:plus" /></button>
+        <div class="edit_btns absolute right-0 z-30 flex flex-col gap-2">
+            <button @click="$emit('newInStory', story.id)" class="button w-min text-2xl"><Icon icon="mdi:plus" /></button>
+            <button @click="$emit('pickStory')" class="button w-min text-2xl"><Icon icon="mdi:pencil" /></button>
+        </div>
         <div v-if="story.banners.length > 1" class="button_container absolute z-20 h-full flex items-center">
             <button @click="current = (current-1)%story.banners.length; current < 0 ? current = story.banners.length-1 : pass" type="button" class="arrow-button w-fit"><Icon icon="iconamoon:arrow-left-2-bold" /></button>
         </div>

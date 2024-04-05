@@ -207,3 +207,13 @@ func (s *Storage) UpdateBannerTimestamp(bannerId string, timestamp time.Time) er
 	}
 	return nil
 }
+
+func (s *Storage) UpdateBanner(banner types.Banner) error {
+	_, err := s.db.Queryx(`
+		UPDATE banners SET name = $1, description = $2 WHERE banner_id = $3;
+	`, banner.Name, banner.Description, banner.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

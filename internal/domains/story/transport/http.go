@@ -41,7 +41,7 @@ func GetStories(store storage.Storage) http.HandlerFunc {
 		if filter == "WHERE " {
 			filter = ""
 		}
-		filter += " ORDER BY stories.stories_id, banners.created_at"
+		filter += " ORDER BY stories.stories_id, banners.banner_id"
 		offset := r.URL.Query().Get("offset")
 		if offset != "" {
 			filter = filter + " OFFSET " + offset
@@ -150,6 +150,35 @@ func NewView(store storage.Storage) http.HandlerFunc {
 			return
 		}
 
+	}
+}
+
+func UpdateBanner(store storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Failed reading body", http.StatusInternalServerError)
+			slog.Error("Failed reading body: " + err.Error())
+			return
+		}
+		var banner types.Banner
+		if err := json.Unmarshal(body, &banner); err != nil {
+			http.Error(w, "Failed unmarshalling body", http.StatusInternalServerError)
+			slog.Error("Failed unmarshalling body: " + err.Error())
+			return
+		}
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			http.Error(w, "Failed to get banner id", http.StatusInternalServerError)
+			slog.Error("Failed to get banner id: " + err.Error())
+			return
+		}
+		banner.ID = int64(id)
+		if err = store.UpdateBanner(banner); err != nil {
+			http.Error(w, "Failed to update banner", http.StatusInternalServerError)
+			slog.Error("Failed to update banner: " + err.Error())
+			return
+		}
 	}
 }
 
