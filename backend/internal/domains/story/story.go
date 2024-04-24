@@ -11,10 +11,7 @@ import (
 )
 
 func Init(db *sqlx.DB, router *chi.Mux) error {
-	store, err := storage.NewStorage(db)
-	if err != nil {
-		return err
-	}
+	store := storage.NewStorage(db)
 
 	router.Group(func(subRouter chi.Router) {
 		subRouter.Use(auth.NewMiddleware())

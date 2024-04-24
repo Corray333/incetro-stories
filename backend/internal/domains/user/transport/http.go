@@ -15,15 +15,15 @@ import (
 )
 
 type Storage interface {
-	InsertUser(user types.User) (int64, string, error)
-	LoginUser(user types.User) (int64, string, error)
-	CheckAndUpdateRefresh(id int64, refresh string) (string, error)
+	InsertUser(user types.User, agent string) (int, string, error)
+	LoginUser(user types.User, agent string) (int, string, error)
+	CheckAndUpdateRefresh(id int, refresh string) (string, error)
 	SelectUser(id string) (types.User, error)
 	UpdateUser(user types.User) error
 }
 
 // SignUp creates a new user it it doesn't exits and sends back refresh token, access token and user info
-func SignUp(store *storage.Storage) http.HandlerFunc {
+func SignUp(store *storage.UserStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := types.User{}
 		user.Avatar = "http://localhost:3001/images/avatars/default_avatar.png"
@@ -38,7 +38,7 @@ func SignUp(store *storage.Storage) http.HandlerFunc {
 			slog.Error("Failed to unmarshal request body: " + err.Error())
 			return
 		}
-		id, refresh, err := store.InsertUser(user)
+		id, refresh, err := store.InsertUser(user, r.UserAgent())
 		if err != nil {
 			http.Error(w, "Failed to insert user", http.StatusInternalServerError)
 			slog.Error("Failed to insert user: " + err.Error())
@@ -69,7 +69,7 @@ func SignUp(store *storage.Storage) http.HandlerFunc {
 }
 
 // LogIn logs in the user and sends back refresh token, access token and user info
-func LogIn(store *storage.Storage) http.HandlerFunc {
+func LogIn(store *storage.UserStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := types.User{}
 		body, err := io.ReadAll(r.Body)
@@ -83,7 +83,7 @@ func LogIn(store *storage.Storage) http.HandlerFunc {
 			slog.Error("Failed to unmarshal request body: " + err.Error())
 			return
 		}
-		id, refresh, err := store.LoginUser(user)
+		id, refresh, err := store.LoginUser(user, r.UserAgent())
 		if err != nil {
 			http.Error(w, "Wrong password or email", http.StatusForbidden)
 			slog.Error("Failed to login user: " + err.Error())

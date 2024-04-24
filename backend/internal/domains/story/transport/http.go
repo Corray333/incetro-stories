@@ -173,7 +173,7 @@ func UpdateBanner(store storage.Storage) http.HandlerFunc {
 			slog.Error("Failed to get banner id: " + err.Error())
 			return
 		}
-		banner.ID = int64(id)
+		banner.ID = id
 		if err = store.UpdateBanner(banner); err != nil {
 			http.Error(w, "Failed to update banner", http.StatusInternalServerError)
 			slog.Error("Failed to update banner: " + err.Error())

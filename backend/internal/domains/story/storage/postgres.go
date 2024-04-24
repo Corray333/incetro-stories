@@ -13,54 +13,9 @@ type Storage struct {
 }
 
 // New creates a new storage and tables
-func NewStorage(db *sqlx.DB) (Storage, error) {
+func NewStorage(db *sqlx.DB) Storage {
 
-	_, err := db.Query(`
-		CREATE TABLE IF NOT EXISTS public.stories
-		(
-			stories_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-			created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			creator bigint NOT NULL,
-			CONSTRAINT stories_pkey PRIMARY KEY (stories_id)
-		);
-		CREATE TABLE IF NOT EXISTS public.banners
-		(
-			banner_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-			name text COLLATE pg_catalog."default",
-			description text COLLATE pg_catalog."default",
-			created_at time with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			CONSTRAINT banners_pkey PRIMARY KEY (banner_id)
-		);
-		CREATE TABLE IF NOT EXISTS public.stories_banner
-		(
-			stories_id bigint NOT NULL,
-			banner_id bigint NOT NULL,
-			CONSTRAINT stories_banner_pkey PRIMARY KEY (banner_id, stories_id),
-			CONSTRAINT stories_banner_banner_id_fkey FOREIGN KEY (banner_id)
-				REFERENCES public.banners (banner_id) MATCH SIMPLE
-				ON UPDATE NO ACTION
-				ON DELETE NO ACTION,
-			CONSTRAINT stories_banner_stories_id_fkey FOREIGN KEY (stories_id)
-				REFERENCES public.stories (stories_id) MATCH SIMPLE
-				ON UPDATE NO ACTION
-				ON DELETE NO ACTION
-		);
-		CREATE TABLE IF NOT EXISTS public.views
-		(
-			user_id bigint NOT NULL,
-			banner_id bigint NOT NULL,
-			CONSTRAINT views_pkey PRIMARY KEY (user_id, banner_id),
-			CONSTRAINT views_banner_id_fkey FOREIGN KEY (banner_id)
-				REFERENCES public.banners (banner_id) MATCH SIMPLE
-				ON UPDATE NO ACTION
-				ON DELETE NO ACTION,
-			CONSTRAINT views_user_id_fkey FOREIGN KEY (user_id)
-				REFERENCES public.users (user_id) MATCH SIMPLE
-				ON UPDATE NO ACTION
-				ON DELETE NO ACTION
-		);
-	`)
-	return Storage{db: db}, err
+	return Storage{db: db}
 }
 
 // InsertBanner inserts a new banner into the database and returns the id
@@ -109,14 +64,14 @@ func (s *Storage) InsertStory(story types.Story) (int64, error) {
 func (s *Storage) SelectStories(filters string) ([]types.Story, error) {
 	var stories []types.Story
 	type row struct {
-		StoriesID       int64  `db:"stories_id"`
-		BannerID        int64  `db:"banner_id"`
+		StoriesID       int    `db:"stories_id"`
+		BannerID        int    `db:"banner_id"`
 		BannerName      string `db:"banner_name"`
 		Description     string `db:"description"`
 		StoryCreatedAt  string `db:"story_created_at"`
 		BannerCreatedAt string `db:"banner_created_at"`
-		Creator         int64  `db:"creator"`
-		UserID          int64  `db:"user_id"`
+		Creator         int    `db:"creator"`
+		UserID          int    `db:"user_id"`
 	}
 
 	rows, err := s.db.Queryx(`
@@ -154,7 +109,7 @@ func (s *Storage) SelectStories(filters string) ([]types.Story, error) {
 }
 
 // InsertView inserts a new view into the database
-func (s *Storage) InsertView(user_id int64, banner_id string) error {
+func (s *Storage) InsertView(user_id int, banner_id string) error {
 	_, err := s.db.Queryx(`
 		INSERT INTO views VALUES ($1, $2);
 	`, user_id, banner_id)

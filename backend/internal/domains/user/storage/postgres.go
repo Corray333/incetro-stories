@@ -2,55 +2,46 @@ package storage
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Corray333/univer_cs/internal/domains/user/types"
 	"github.com/Corray333/univer_cs/pkg/server/auth"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
 
-type Storage struct {
-	db *sqlx.DB
+type UserStorage struct {
+	db    *sqlx.DB
+	redis *redis.Client
 }
 
 // New creates a new storage and tables
-func NewStorage(db *sqlx.DB) (*Storage, error) {
-
-	_, err := db.Query(`
-		CREATE TABLE IF NOT EXISTS users
-		(
-			user_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 9223372036854775807 CACHE 1 ),
-			name text COLLATE pg_catalog."default" NOT NULL,
-			email text COLLATE pg_catalog."default" NOT NULL,
-			password character varying(60) COLLATE pg_catalog."default" NOT NULL,
-			avatar text COLLATE pg_catalog."default",
-			CONSTRAINT users_pkey PRIMARY KEY (user_id),
-			CONSTRAINT users_email_key UNIQUE (email)
-		);
-		CREATE TABLE IF NOT EXISTS user_token
-		(
-			user_id bigint NOT NULL,
-			token text NOT NULL,
-			PRIMARY KEY (user_id),
-			FOREIGN KEY (user_id)
-				REFERENCES public.users (user_id) MATCH SIMPLE
-				ON UPDATE NO ACTION
-				ON DELETE NO ACTION
-				NOT VALID
-		);
-	`)
-	return &Storage{db: db}, err
+func NewStorage(db *sqlx.DB) *UserStorage {
+	return &UserStorage{
+		db: db,
+		redis: redis.NewClient(&redis.Options{
+			Addr:     os.Getenv("REDIS_ADDR"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       0,
+		}),
+	}
 }
 
 // InsertUser inserts a new user into the database and returns the id
-func (s *Storage) InsertUser(user types.User) (int64, string, error) {
+func (s *UserStorage) InsertUser(user types.User, agent string) (int, string, error) {
 	passHash, err := auth.Hash(user.Password)
 	if err != nil {
 		return -1, "", err
 	}
 	user.Password = passHash
 
-	rows := s.db.QueryRow(`
+	tx, err := s.db.Begin()
+	if err != nil {
+		return -1, "", err
+	}
+
+	rows := tx.QueryRow(`
 		INSERT INTO users (username, email, password, avatar) VALUES ($1, $2, $3, $4) RETURNING user_id;
 	`, user.Username, user.Email, user.Password, "http://localhost:3001/images/avatars/default_avatar.png")
 
@@ -63,21 +54,33 @@ func (s *Storage) InsertUser(user types.User) (int64, string, error) {
 		return -1, "", err
 	}
 
-	_, err = s.db.Queryx(`
-		INSERT INTO user_token (user_id, token) VALUES ($1, $2);
-	`, user.ID, refresh)
-	if err != nil {
+	if err := s.SetRefreshToken(user.ID, agent, refresh); err != nil {
+		tx.Rollback()
 		return -1, "", err
 	}
+
+	// _, err = s.db.Queryx(`
+	// 	INSERT INTO user_token (user_id, token) VALUES ($1, $2);
+	// `, user.ID, refresh)
+	// if err != nil {
+	// 	return -1, "", err
+	// }
+
+	tx.Commit()
 
 	return user.ID, refresh, nil
 }
 
 // LoginUser checks if the user exists and the password is correct
-func (s *Storage) LoginUser(user types.User) (int64, string, error) {
+func (s *UserStorage) LoginUser(user types.User, agent string) (int, string, error) {
 	password := user.Password
 
-	rows := s.db.QueryRow(`
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return -1, "", err
+	}
+
+	rows := tx.QueryRow(`
 		SELECT user_id, password FROM users WHERE email = $1;
 	`, user.Email)
 
@@ -94,18 +97,25 @@ func (s *Storage) LoginUser(user types.User) (int64, string, error) {
 		return -1, "", err
 	}
 
-	_, err = s.db.Queryx(`
-		INSERT INTO user_token (user_id, token) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET token = $3;
-	`, user.ID, refresh, refresh)
-	if err != nil {
+	if err := s.SetRefreshToken(user.ID, agent, refresh); err != nil {
+		tx.Rollback()
 		return -1, "", err
 	}
+
+	// _, err = tx.Queryx(`
+	// 	INSERT INTO user_token (user_id, token) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET token = $3;
+	// `, user.ID, refresh, refresh)
+	// if err != nil {
+	// 	return -1, "", err
+	// }
+
+	tx.Commit()
 
 	return user.ID, refresh, nil
 }
 
 // CheckAndUpdateRefresh checks if the refresh token is valid and updates it
-func (s *Storage) CheckAndUpdateRefresh(id int64, refresh string) (string, error) {
+func (s *UserStorage) CheckAndUpdateRefresh(id int, refresh string) (string, error) {
 	rows, err := s.db.Queryx(`
 		SELECT token FROM user_token WHERE user_id = $1 AND token = $2;
 	`, id, refresh)
@@ -128,7 +138,7 @@ func (s *Storage) CheckAndUpdateRefresh(id int64, refresh string) (string, error
 	return newRefresh, nil
 }
 
-func (s *Storage) SelectUser(id string) (types.User, error) {
+func (s *UserStorage) SelectUser(id string) (types.User, error) {
 	var user types.User
 	rows, err := s.db.Queryx(`
 		SELECT * FROM users WHERE user_id = $1;
@@ -146,7 +156,7 @@ func (s *Storage) SelectUser(id string) (types.User, error) {
 	return user, nil
 }
 
-func (s *Storage) UpdateUser(user types.User) error {
+func (s *UserStorage) UpdateUser(user types.User) error {
 	fmt.Println()
 	fmt.Println(user)
 	fmt.Println()

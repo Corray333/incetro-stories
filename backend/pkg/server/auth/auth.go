@@ -52,7 +52,7 @@ func Verify(hashed, password string) bool {
 }
 
 // CreateToken creates a new JWT token by the email
-func CreateToken(id int64, lifeTime time.Duration) (string, error) {
+func CreateToken(id int, lifeTime time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"id":  id,
@@ -86,7 +86,7 @@ func VerifyToken(tokenString string) error {
 
 type Credentials struct {
 	Email string `json:"email"`
-	ID    int64  `json:"id,omitempty" db:"user_id"`
+	ID    int    `json:"id,omitempty" db:"user_id"`
 }
 
 func ExtractCredentials(tokenString string) (Credentials, error) {
@@ -98,13 +98,13 @@ func ExtractCredentials(tokenString string) (Credentials, error) {
 		return Credentials{}, err
 	}
 	credentials := Credentials{
-		ID: int64(claims["id"].(float64)),
+		ID: int(claims["id"].(float64)),
 	}
 	return credentials, nil
 }
 
 type Storage interface {
-	CheckAndUpdateRefresh(id int64, refresh string) (string, error)
+	CheckAndUpdateRefresh(id int, refresh string) (string, error)
 }
 
 func RefreshAccessToken(store Storage, refresh string) (string, string, error) {

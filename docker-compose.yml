@@ -1,0 +1,34 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  api:
+      build:
+        context: ./backend
+        dockerfile: Dockerfile
+      ports:
+        - 3001:3001
+      command: make run
+      volumes: # Add this section
+        - ./backend:/go/src/app # Replace with your Go app's path in the container
+      depends_on:
+        - db
+        - redis
+  # vue:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   command: npm run dev
+  #   ports:
+  #     - 3000:3000
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: stories
+    ports:
+      - 5431:5432
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379

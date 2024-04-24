@@ -17,10 +17,7 @@ type Storage interface {
 }
 
 func Init(db *sqlx.DB, router *chi.Mux) error {
-	store, err := storage.NewStorage(db)
-	if err != nil {
-		return err
-	}
+	store := storage.NewStorage(db)
 	router.Post("/users/login", transport.LogIn(store))
 	router.Post("/users/signup", transport.SignUp(store))
 	router.Get("/users/refresh", transport.RefreshAccessToken(store))
