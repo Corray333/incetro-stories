@@ -18,17 +18,17 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    console.log(document.cookie)
-     if (!document.cookie) {
-       next({ name: 'login' });
-     } else {
-       next();
-     }
-  } else {
-     next();
-  }
- });
+// router.beforeEach((to, from, next) => {
+//   if (to.matched.some(record => record.meta.requiresAuth)) {
+//     console.log(document.cookie)
+//      if (!document.cookie) {
+//        next({ name: 'login' });
+//      } else {
+//        next();
+//      }
+//   } else {
+//      next();
+//   }
+//  });
 
 export default router

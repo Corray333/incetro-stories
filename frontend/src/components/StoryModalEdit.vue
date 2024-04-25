@@ -19,7 +19,7 @@ const user = ref({})
 const loadUserInfo = async ()=>{
     try {
         let uid = props.story.creator
-        let {data} = await axios.get(`http://localhost:3001/users/${uid}`, {
+        let {data} = await axios.get(`http://localhost:3001/api/users/${uid}`, {
             headers:{
                 'Authorization': getCookie('Authorization'),
             }
@@ -41,7 +41,7 @@ onBeforeMount(()=>{
 
 const updateBanner = async (id) =>{
     try {
-        await axios.put(`http://localhost:3001/banners/${props.story.banners[id].id}`,{
+        await axios.put(`http://localhost:3001/api/banners/${props.story.banners[id].id}`,{
             name: props.story.banners[id].name,
             description: props.story.banners[id].description,
         }, {

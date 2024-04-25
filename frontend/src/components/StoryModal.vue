@@ -19,7 +19,7 @@ const user = ref({})
 const loadUserInfo = async ()=>{
     try {
         let uid = props.story.creator
-        let {data} = await axios.get(`http://localhost:3001/users/${uid}`, {
+        let {data} = await axios.get(`http://localhost:3001/api/users/${uid}`, {
             headers:{
                 'Authorization': getCookie('Authorization'),
             }
@@ -43,9 +43,8 @@ onBeforeMount(()=>{
 </script>
 
 <template>
-    <div  @click.self="$emit('close')" class="modal-wrapper w-screen h-screen absolute z-50 top-0 left-0 backdrop-blur-sm flex justify-center items-center">
+    <div  @click.self="$emit('close')" class="modal-wrapper w-screen h-screen fixed z-50 top-0 left-0 backdrop-blur-sm flex justify-center items-center">
         <section class=" w-3/4 overflow-hidden rounded-xl drop-shadow-xl h-3/4">
-
             <div class="content bg-white grid grid-cols-3 h-full">
                 <div class="slider-container overflow-hidden relative h-full col-span-2">
                     <div v-if="story.banners.length > 1" class="button_container absolute z-20 h-full flex items-center">

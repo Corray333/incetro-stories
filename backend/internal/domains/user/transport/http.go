@@ -17,7 +17,7 @@ import (
 type Storage interface {
 	InsertUser(user types.User, agent string) (int, string, error)
 	LoginUser(user types.User, agent string) (int, string, error)
-	CheckAndUpdateRefresh(id int, refresh string) (string, error)
+	RefreshToken(id int, agent string, refresh string) (string, string, error)
 	SelectUser(id string) (types.User, error)
 	UpdateUser(user types.User) error
 }
@@ -117,7 +117,13 @@ func LogIn(store *storage.UserStorage) http.HandlerFunc {
 func RefreshAccessToken(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		refresh := r.Header.Get("Refresh")
-		access, refresh, err := auth.RefreshAccessToken(store, refresh)
+		creds, err := auth.ExtractCredentials(r.Header.Get("Refresh"))
+		if err != nil {
+			http.Error(w, "Failed to extract credentials", http.StatusBadRequest)
+			slog.Error("Failed to extract credentials: " + err.Error())
+			return
+		}
+		access, refresh, err := store.RefreshToken(creds.ID, r.UserAgent(), refresh)
 		if err != nil {
 			http.Error(w, "Failed to refresh token", http.StatusInternalServerError)
 			slog.Error("Failed to refresh token: " + err.Error())

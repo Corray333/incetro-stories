@@ -27,7 +27,7 @@ function getCookie(name) {
 
 const refreshTokens = async()=>{
     try {
-        let {data} = await axios.get('http://localhost:3001/users/refresh', {
+        let {data} = await axios.get('http://localhost:3001/api/users/refresh', {
             headers:{
                 'Refresh': getCookie('Refresh'),
             }
@@ -51,7 +51,7 @@ const createBanner = async ()=>{
     formData.append('description', description.value) 
     console.log(getCookie("Authorization"))
     try{
-        let url = "http://localhost:3001/banners"
+        let url = "http://localhost:3001/api/banners"
         if (props.story_id) url += `?story_id=${props.story_id}`
         await axios.post(url, formData, {
             headers: {

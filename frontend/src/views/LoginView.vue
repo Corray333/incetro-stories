@@ -55,7 +55,7 @@ const login = async ()=>{
             return
         }
         if (action.value == "Log in"){
-            let {data} = await axios.post('http://localhost:3001/users/login', {
+            let {data} = await axios.post('http://localhost:3001/api/users/login', {
                 email: email.value,
                 password: password.value,
             })
@@ -63,7 +63,7 @@ const login = async ()=>{
             document.cookie = `Refresh=${data.refresh};`
             router.push('/home')
         } else if (action.value == "Sign up"){
-            let {data} = await axios.post('http://localhost:3001/users/signup', {
+            let {data} = await axios.post('http://localhost:3001/api/users/signup', {
                 username: username.value,
                 email: email.value,
                 password: password.value,

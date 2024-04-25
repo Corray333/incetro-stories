@@ -114,30 +114,6 @@ func (s *UserStorage) LoginUser(user types.User, agent string) (int, string, err
 	return user.ID, refresh, nil
 }
 
-// CheckAndUpdateRefresh checks if the refresh token is valid and updates it
-func (s *UserStorage) CheckAndUpdateRefresh(id int, refresh string) (string, error) {
-	rows, err := s.db.Queryx(`
-		SELECT token FROM user_token WHERE user_id = $1 AND token = $2;
-	`, id, refresh)
-	if err != nil {
-		return "", err
-	}
-	if !rows.Next() {
-		return "", fmt.Errorf("invalid refresh token")
-	}
-	newRefresh, err := auth.CreateToken(id, auth.RefreshTokenLifeTime)
-	if err != nil {
-		return "", err
-	}
-	_, err = s.db.Queryx(`
-		UPDATE user_token SET token = $1 WHERE user_id = $2;
-	`, newRefresh, id)
-	if err != nil {
-		return "", err
-	}
-	return newRefresh, nil
-}
-
 func (s *UserStorage) SelectUser(id string) (types.User, error) {
 	var user types.User
 	rows, err := s.db.Queryx(`

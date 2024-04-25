@@ -9,30 +9,7 @@ const emit = defineEmits(['newInStory'])
 const current = ref(0)
 const hovered = ref(false)
 
-// function getCookie(name) {
-//  const value = `; ${document.cookie}`;
-//  const parts = value.split(`; ${name}=`);
-//  if (parts.length === 2) return parts.pop().split(';').shift();
-// }
 
-// onBeforeMount(()=>{
-//     props.story.banners.forEach(banner=>{
-//         try{
-//             axios.get(`http://localhost:3001/images/banners/banner${banner.id}.png`, {
-//                 headers: {
-//                     'Authorization': getCookie('Authorization')
-//                 },
-//                 responseType: 'blob'
-//             }).then(response=>{
-//                 banner.img=window.URL.createObjectURL(new Blob([response.data]))
-//             }) .catch(error =>{
-//                 console.log(error)
-//             })
-//         } catch(error){
-//             console.log(error)
-//         }
-//     })
-// })
 
 </script>
 

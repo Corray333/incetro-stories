@@ -20,7 +20,7 @@ function getCookie(name) {
 
 const refreshTokens = async()=>{
     try {
-        let {data} = await axios.get('http://localhost:3001/users/refresh', {
+        let {data} = await axios.get('http://localhost:3001/api/users/refresh', {
             headers:{
                 'Refresh': getCookie('Refresh'),
             }
@@ -35,7 +35,7 @@ const refreshTokens = async()=>{
 
 const loadContent = async ()=>{
     try {
-        let {data} = await axios.get('http://localhost:3001/stories', {
+        let {data} = await axios.get('http://localhost:3001/api/stories', {
             headers:{
                 'Authorization': getCookie('Authorization'),
             }
