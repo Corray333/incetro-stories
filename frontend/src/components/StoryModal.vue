@@ -63,7 +63,7 @@ onBeforeMount(()=>{
                     <img :src="user.avatar" alt="" class="w-16 h-16 object-cover rounded-full">
                     <div class=" h-full flex flex-col rounded-xl">
                         <router-link :to="`/users/${story.creator}`" class="duration-300 hover:text-green-400"><i class="opacity-50 text-xs">{{ user.username }}</i></router-link>
-                        <h2 class="font-bold text-xl">{{ story.banners[current].name }}</h2>
+                        <h2 class="font-bold text-xl">{{ story.banners[current].title }}</h2>
                         <p v-html="story.banners[current].description"></p>
                     </div>
                 </div>

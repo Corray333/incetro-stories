@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"time"
+	"strconv"
 
 	"github.com/Corray333/univer_cs/internal/domains/story/types"
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -13,60 +14,98 @@ type Storage struct {
 }
 
 // New creates a new storage and tables
-func NewStorage(db *sqlx.DB) Storage {
+func NewStorage(db *sqlx.DB) *Storage {
 
-	return Storage{db: db}
+	return &Storage{db: db}
 }
 
 // InsertBanner inserts a new banner into the database and returns the id
-func (s *Storage) InsertBanner(storyId string, banner types.Banner) (int64, error) {
-	var id int64
-	rows, err := s.db.Queryx(`
-	INSERT INTO banners (name, description) VALUES ($1, $2) RETURNING banner_id;
-`, banner.Name, banner.Description)
+func (s *Storage) InsertBanner(storyId string, uid int, banners []types.Banner) (int, error) {
+
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return -1, err
+	}
+	defer tx.Rollback()
+
+	var story_id int
+	if storyId == "" {
+		var story types.Story
+		story.Creator = uid
+
+		rows, err := tx.Queryx(`
+			INSERT INTO stories (creator) VALUES ($1) RETURNING story_id;
+		`, story.Creator)
+		if err != nil {
+			return -1, err
+		}
+		for rows.Next() {
+			err := rows.Scan(&story_id)
+			if err != nil {
+				return -1, err
+			}
+		}
+	} else {
+		// Check if the story exists
+		story_id, _ = strconv.Atoi(storyId)
+	}
+
+	var banner_id int
+	rows, err := tx.Queryx(`INSERT INTO banners VALUES (DEFAULT, DEFAULT) RETURNING banner_id;`)
 	if err != nil {
 		return -1, err
 	}
 	for rows.Next() {
-		err := rows.Scan(&id)
+		err := rows.Scan(&banner_id)
 		if err != nil {
 			return -1, err
 		}
 	}
-	_, err = s.db.Queryx(`
-	INSERT INTO stories_banner (stories_id, banner_id) VALUES ($1, $2);
-`, storyId, id)
+	defer rows.Close()
+	_, err = tx.Exec(`
+		INSERT INTO story_banner (story_id, banner_id) VALUES ($1, $2);
+	`, story_id, banner_id)
 	if err != nil {
 		return -1, err
 	}
-	return id, nil
+
+	for _, banner := range banners {
+		_, err = tx.Exec(`
+			INSERT INTO banner_lang (banner_id, lang, title, description) VALUES ($1, $2, $3, $4);
+		`, banner_id, "eng", banner.Title, banner.Description)
+		if err != nil {
+			return -1, err
+		}
+	}
+	tx.Commit()
+	return banner_id, nil
 }
 
 // InsertStory inserts a new story into the database and returns the id
-func (s *Storage) InsertStory(story types.Story) (int64, error) {
-	var id int64
+func (s *Storage) InsertStory(story types.Story) (int, error) {
+	var story_id int
 	rows, err := s.db.Queryx(`
-		INSERT INTO stories (created_at, creator) VALUES (CURRENT_TIMESTAMP, $1) RETURNING stories_id;
+		INSERT INTO stories (creator) VALUES ($1) RETURNING story_id;
 	`, story.Creator)
 	if err != nil {
 		return -1, err
 	}
 	for rows.Next() {
-		err := rows.Scan(&id)
+		err := rows.Scan(&story_id)
 		if err != nil {
 			return -1, err
 		}
 	}
-	return id, nil
+	return story_id, nil
 }
 
 // SelectStories returns all the stories from the database
-func (s *Storage) SelectStories(filters string) ([]types.Story, error) {
+func (s *Storage) SelectStories(story_id, banner_id, creator, offset, lang string) ([]types.Story, error) {
 	var stories []types.Story
 	type row struct {
-		StoriesID       int    `db:"stories_id"`
+		StoriesID       int    `db:"story_id"`
 		BannerID        int    `db:"banner_id"`
-		BannerName      string `db:"banner_name"`
+		BannerTitle     string `db:"banner_title"`
 		Description     string `db:"description"`
 		StoryCreatedAt  string `db:"story_created_at"`
 		BannerCreatedAt string `db:"banner_created_at"`
@@ -74,10 +113,32 @@ func (s *Storage) SelectStories(filters string) ([]types.Story, error) {
 		UserID          int    `db:"user_id"`
 	}
 
-	rows, err := s.db.Queryx(`
-	SELECT stories.stories_id, banners.banner_id, banners.name AS banner_name, description, stories.created_at AS story_created_at, banners.created_at AS banner_created_at, stories.creator
-	FROM stories_banner INNER JOIN banners ON banners.banner_id = stories_banner.banner_id 
-	INNER JOIN stories ON stories.stories_id = stories_banner.stories_id ` + filters + ";")
+	off, _ := strconv.Atoi(offset)
+	where := squirrel.Eq{}
+	if creator != "" {
+		where["creator"] = creator
+	}
+	if banner_id != "" {
+		where["banner_id"] = banner_id
+	}
+	if story_id != "" {
+		where["story_id"] = story_id
+	}
+	if lang != "" {
+		where["lang"] = lang
+	} else {
+		where["lang"] = "eng"
+	}
+
+	query := squirrel.Select("stories.story_id, banners.banner_id, banner_lang.title AS banner_title, banner_lang.description, stories.created_at AS story_created_at, banners.created_at AS banner_created_at, stories.creator").
+		From("story_banner").
+		Join("banners on banners.banner_id = story_banner.banner_id ").
+		Join("stories ON stories.story_id = story_banner.story_id").
+		Join("banner_lang ON banner_lang.banner_id = banners.banner_id").
+		Where(where).OrderBy("stories.story_id", "banners.banner_id").Offset(uint64(off))
+	sql, args, _ := query.PlaceholderFormat(squirrel.Dollar).ToSql()
+
+	rows, err := s.db.Queryx(sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +154,7 @@ func (s *Storage) SelectStories(filters string) ([]types.Story, error) {
 		story.CreatedAt = r.StoryCreatedAt
 		banner := types.Banner{
 			ID:          r.BannerID,
-			Name:        r.BannerName,
+			Title:       r.BannerTitle,
 			Description: r.Description,
 			CreatedAt:   r.BannerCreatedAt,
 		}
@@ -130,43 +191,10 @@ func (s *Storage) UpdateBannerMedia(bannerId string, mediaURL string) error {
 	return nil
 }
 
-// UpdateBannerName updates the name of the banner
-func (s *Storage) UpdateBannerName(bannerId string, name string) error {
-	_, err := s.db.Queryx(`
-		UPDATE banners SET name = $1 WHERE banner_id = $2;
-	`, name, bannerId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// UpdateBannerDescription updates the description of the banner
-func (s *Storage) UpdateBannerDescription(bannerId string, description string) error {
-	_, err := s.db.Queryx(`
-		UPDATE banners SET description = $1 WHERE banner_id = $2;
-	`, description, bannerId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// UpdateBannerTimestamp updates the timestamp of the banner
-func (s *Storage) UpdateBannerTimestamp(bannerId string, timestamp time.Time) error {
-	_, err := s.db.Queryx(`
-		UPDATE stories SET expires_at = $1 WHERE banner_id = $2;
-	`, timestamp.String(), bannerId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *Storage) UpdateBanner(banner types.Banner) error {
 	_, err := s.db.Queryx(`
-		UPDATE banners SET name = $1, description = $2 WHERE banner_id = $3;
-	`, banner.Name, banner.Description, banner.ID)
+		UPDATE banners SET title = $1, description = $2 WHERE banner_id = $3;
+	`, banner.Title, banner.Description, banner.ID)
 	if err != nil {
 		return err
 	}

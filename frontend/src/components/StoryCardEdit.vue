@@ -26,7 +26,7 @@ const hovered = ref(false)
             <div class="banner h-96  w-full min-w-full relative text-white flex items-end" v-for="(banner, i) of story.banners" :key="i" :style="`z-index:${i == current ? '100':'initial'}`">
                 <img :src="`http://localhost:3001/images/banners/banner${banner.id}.png`" alt="" :style="`transform: ${hovered ? 'scale(1.2)' : 'none'};`" class="w-full h-full object-cover absolute duration-300" style="z-index:0;">
                 <div class="banner-info relative z-10 p-5 pt-10 h-full flex flex-col justify-end">
-                    <h2 class="font-bold text-xl">{{ banner.name }}</h2>
+                    <h2 class="font-bold text-xl">{{ banner.title }}</h2>
                     <p class="line-clamp-3" v-html="banner.description"></p>
                 </div>
             </div>

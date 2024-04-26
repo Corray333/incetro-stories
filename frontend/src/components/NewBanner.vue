@@ -47,7 +47,7 @@ const refreshTokens = async()=>{
 const createBanner = async ()=>{
     const formData = new FormData()
     formData.append('file', file.value)
-    formData.append('name', title.value)
+    formData.append('title', title.value)
     formData.append('description', description.value) 
     console.log(getCookie("Authorization"))
     try{

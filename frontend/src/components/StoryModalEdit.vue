@@ -42,7 +42,7 @@ onBeforeMount(()=>{
 const updateBanner = async (id) =>{
     try {
         await axios.put(`http://localhost:3001/api/banners/${props.story.banners[id].id}`,{
-            name: props.story.banners[id].name,
+            title: props.story.banners[id].title,
             description: props.story.banners[id].description,
         }, {
             headers:{
@@ -84,7 +84,7 @@ const updateBanner = async (id) =>{
                     <img :src="user.avatar" alt="" class="w-16 h-16 object-cover rounded-full">
                     <div class=" h-full flex flex-col rounded-xl">
                         <i class="opacity-50 text-xs">{{ user.username }}</i>
-                        <input class="font-bold text-xl" v-model="story.banners[current].name">
+                        <input class="font-bold text-xl" v-model="story.banners[current].title">
                         <textarea class="text-input text-black w-full" rows="20" v-model="story.banners[current].description"></textarea>
                         <button class="button absolute bottom-0 right-0 m-5 w-fit px-5" @click="updateBanner(current)">Save</button>
                     </div>
