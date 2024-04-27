@@ -70,33 +70,17 @@ func (s *Storage) InsertBanner(storyId string, uid int, banners []types.Banner) 
 	}
 
 	for _, banner := range banners {
-		_, err = tx.Exec(`
-			INSERT INTO banner_lang (banner_id, lang, title, description) VALUES ($1, $2, $3, $4);
-		`, banner_id, "eng", banner.Title, banner.Description)
-		if err != nil {
-			return -1, err
+		for _, lang := range banner.Langs {
+			_, err := tx.Exec(`
+				INSERT INTO banner_lang VALUES ($1, $2, $3, $4);
+			`, banner_id, lang.Lang, lang.Title, lang.Description)
+			if err != nil {
+				return -1, err
+			}
 		}
 	}
 	tx.Commit()
 	return banner_id, nil
-}
-
-// InsertStory inserts a new story into the database and returns the id
-func (s *Storage) InsertStory(story types.Story) (int, error) {
-	var story_id int
-	rows, err := s.db.Queryx(`
-		INSERT INTO stories (creator) VALUES ($1) RETURNING story_id;
-	`, story.Creator)
-	if err != nil {
-		return -1, err
-	}
-	for rows.Next() {
-		err := rows.Scan(&story_id)
-		if err != nil {
-			return -1, err
-		}
-	}
-	return story_id, nil
 }
 
 // SelectStories returns all the stories from the database
@@ -111,6 +95,7 @@ func (s *Storage) SelectStories(story_id, banner_id, creator, offset, lang strin
 		BannerCreatedAt string `db:"banner_created_at"`
 		Creator         int    `db:"creator"`
 		UserID          int    `db:"user_id"`
+		Lang            string `db:"lang"`
 	}
 
 	off, _ := strconv.Atoi(offset)
@@ -119,18 +104,16 @@ func (s *Storage) SelectStories(story_id, banner_id, creator, offset, lang strin
 		where["creator"] = creator
 	}
 	if banner_id != "" {
-		where["banner_id"] = banner_id
+		where["banners.banner_id"] = banner_id
 	}
 	if story_id != "" {
-		where["story_id"] = story_id
+		where["stories.story_id"] = story_id
 	}
-	if lang != "" {
+	if lang != "" && lang != "all" {
 		where["lang"] = lang
-	} else {
-		where["lang"] = "eng"
 	}
 
-	query := squirrel.Select("stories.story_id, banners.banner_id, banner_lang.title AS banner_title, banner_lang.description, stories.created_at AS story_created_at, banners.created_at AS banner_created_at, stories.creator").
+	query := squirrel.Select("stories.story_id, banners.banner_id, banner_lang.title AS banner_title, banner_lang.description, lang, stories.created_at AS story_created_at, banners.created_at AS banner_created_at, stories.creator").
 		From("story_banner").
 		Join("banners on banners.banner_id = story_banner.banner_id ").
 		Join("stories ON stories.story_id = story_banner.story_id").
@@ -143,7 +126,7 @@ func (s *Storage) SelectStories(story_id, banner_id, creator, offset, lang strin
 		return nil, err
 	}
 	var r row
-	counter := -1
+	counterStory := -1
 	for rows.Next() {
 		if err := rows.StructScan(&r); err != nil {
 			return nil, err
@@ -152,18 +135,25 @@ func (s *Storage) SelectStories(story_id, banner_id, creator, offset, lang strin
 		story.ID = r.StoriesID
 		story.Creator = r.Creator
 		story.CreatedAt = r.StoryCreatedAt
+
+		lang := types.BannerLang{Lang: r.Lang, Title: r.BannerTitle, Description: r.Description}
+
 		banner := types.Banner{
-			ID:          r.BannerID,
-			Title:       r.BannerTitle,
-			Description: r.Description,
-			CreatedAt:   r.BannerCreatedAt,
+			ID:        r.BannerID,
+			Langs:     []types.BannerLang{lang},
+			CreatedAt: r.BannerCreatedAt,
 		}
-		if counter >= 0 && story.ID == stories[counter].ID {
-			stories[counter].Banners = append(stories[counter].Banners, banner)
+
+		if counterStory >= 0 && story.ID == stories[counterStory].ID {
+			if banner.ID == stories[counterStory].Banners[len(stories[counterStory].Banners)-1].ID {
+				stories[counterStory].Banners[len(stories[counterStory].Banners)-1].Langs = append(stories[counterStory].Banners[len(stories[counterStory].Banners)-1].Langs, lang)
+			} else {
+				stories[counterStory].Banners = append(stories[counterStory].Banners, banner)
+			}
 		} else {
 			story.Banners = append(story.Banners, banner)
 			stories = append(stories, story)
-			counter++
+			counterStory++
 		}
 	}
 	return stories, nil
@@ -191,12 +181,12 @@ func (s *Storage) UpdateBannerMedia(bannerId string, mediaURL string) error {
 	return nil
 }
 
-func (s *Storage) UpdateBanner(banner types.Banner) error {
-	_, err := s.db.Queryx(`
-		UPDATE banners SET title = $1, description = $2 WHERE banner_id = $3;
-	`, banner.Title, banner.Description, banner.ID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// func (s *Storage) UpdateBanner(banner types.Banner) error {
+// 	_, err := s.db.Queryx(`
+// 		UPDATE banners SET title = $1, description = $2 WHERE banner_id = $3;
+// 	`, banner.Title, banner.Description, banner.ID)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

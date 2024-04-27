@@ -1,12 +1,16 @@
 package types
 
 type Banner struct {
-	ID          int    `json:"id,omitempty" db:"banner_id"`
+	ID        int          `json:"id,omitempty" db:"banner_id"`
+	Langs     []BannerLang `json:"langs" db:"langs"`
+	CreatedAt string       `json:"created_at,omitempty" db:"created_at"`
+	Views     int          `json:"views"`
+}
+
+type BannerLang struct {
+	Lang        string `json:"lang" db:"lang"`
 	Title       string `json:"title" db:"title"`
 	Description string `json:"description" db:"description"`
-	CreatedAt   string `json:"created_at,omitempty" db:"created_at"`
-	Views       int    `json:"views"`
-	Lang        string `json:"lang" db:"-"`
 }
 
 type Story struct {

@@ -10,17 +10,15 @@ import (
 
 	"github.com/Corray333/univer_cs/internal/domains/story/types"
 	"github.com/Corray333/univer_cs/pkg/server/auth"
-	"github.com/go-chi/chi/v5"
 )
 
 const MaxFileSize = 64 << 20
 
 type Storage interface {
 	SelectStories(story_id, banner_id, creator, offset, lang string) ([]types.Story, error)
-	InsertStory(story types.Story) (int, error)
 	InsertBanner(story_id string, uid int, banners []types.Banner) (int, error)
 	InsertView(user_id int, banner_id string) error
-	UpdateBanner(banner types.Banner) error
+	// UpdateBanner(banner types.Banner) error
 }
 
 func GetStories(store Storage) http.HandlerFunc {
@@ -132,31 +130,31 @@ func NewView(store Storage) http.HandlerFunc {
 	}
 }
 
-func UpdateBanner(store Storage) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Failed reading body", http.StatusInternalServerError)
-			slog.Error("Failed reading body: " + err.Error())
-			return
-		}
-		var banner types.Banner
-		if err := json.Unmarshal(body, &banner); err != nil {
-			http.Error(w, "Failed unmarshalling body", http.StatusInternalServerError)
-			slog.Error("Failed unmarshalling body: " + err.Error())
-			return
-		}
-		id, err := strconv.Atoi(chi.URLParam(r, "id"))
-		if err != nil {
-			http.Error(w, "Failed to get banner id", http.StatusInternalServerError)
-			slog.Error("Failed to get banner id: " + err.Error())
-			return
-		}
-		banner.ID = id
-		if err = store.UpdateBanner(banner); err != nil {
-			http.Error(w, "Failed to update banner", http.StatusInternalServerError)
-			slog.Error("Failed to update banner: " + err.Error())
-			return
-		}
-	}
-}
+// func UpdateBanner(store Storage) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		body, err := io.ReadAll(r.Body)
+// 		if err != nil {
+// 			http.Error(w, "Failed reading body", http.StatusInternalServerError)
+// 			slog.Error("Failed reading body: " + err.Error())
+// 			return
+// 		}
+// 		var banner types.Banner
+// 		if err := json.Unmarshal(body, &banner); err != nil {
+// 			http.Error(w, "Failed unmarshalling body", http.StatusInternalServerError)
+// 			slog.Error("Failed unmarshalling body: " + err.Error())
+// 			return
+// 		}
+// 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+// 		if err != nil {
+// 			http.Error(w, "Failed to get banner id", http.StatusInternalServerError)
+// 			slog.Error("Failed to get banner id: " + err.Error())
+// 			return
+// 		}
+// 		banner.ID = id
+// 		if err = store.UpdateBanner(banner); err != nil {
+// 			http.Error(w, "Failed to update banner", http.StatusInternalServerError)
+// 			slog.Error("Failed to update banner: " + err.Error())
+// 			return
+// 		}
+// 	}
+// }
