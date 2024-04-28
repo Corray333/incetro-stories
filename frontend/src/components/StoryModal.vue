@@ -2,12 +2,9 @@
 import { Icon } from '@iconify/vue'
 import {ref, onBeforeMount} from 'vue'
 import axios from 'axios'
+import { getCookie, refreshTokens } from '../utils/helpers'
 
-function getCookie(name) {
- const value = `; ${document.cookie}`;
- const parts = value.split(`; ${name}=`);
- if (parts.length === 2) return parts.pop().split(';').shift();
-}
+
 
 const props = defineProps(['story'])
 
@@ -55,7 +52,7 @@ onBeforeMount(()=>{
                     </div>
                     <div class="slider-track flex w-full duration-300 h-full" :style="`transform: translateX(calc(-100% * ${current}))`">
                         <div class="h-full banner  w-full min-w-full relative text-white flex items-end" v-for="(banner, i) of story.banners" :key="i" :style="`z-index:${i == current ? '100':'initial'}`">
-                            <img :src="`http://localhost:3001/images/banners/banner${banner.id}.png`" alt="" class="w-full h-full object-contain duration-300 bg-black">
+                            <img :src="banner.media_url" alt="" class="w-full h-full object-contain duration-300 bg-black">
                         </div>
                     </div>
                 </div>
@@ -63,7 +60,7 @@ onBeforeMount(()=>{
                     <img :src="user.avatar" alt="" class="w-16 h-16 object-cover rounded-full">
                     <div class=" h-full flex flex-col rounded-xl">
                         <router-link :to="`/users/${story.creator}`" class="duration-300 hover:text-green-400"><i class="opacity-50 text-xs">{{ user.username }}</i></router-link>
-                        <h2 class="font-bold text-xl">{{ story.banners[current].title }}</h2>
+                        <h2 class="font-bold text-xl">{{ story.banners[current].langs[0].title }}</h2>
                         <p v-html="story.banners[current].description"></p>
                     </div>
                 </div>

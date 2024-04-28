@@ -4,32 +4,34 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/Corray333/univer_cs/internal/domains/story/types"
 	"github.com/Corray333/univer_cs/pkg/server/auth"
+	"github.com/go-chi/chi/v5"
 )
 
 const MaxFileSize = 64 << 20
 
 type Storage interface {
-	SelectStories(story_id, banner_id, creator, offset, lang string) ([]types.Story, error)
-	InsertBanner(story_id string, uid int, banners []types.Banner) (int, error)
+	SelectStories(project_id, story_id, banner_id, creator, offset, lang string) ([]types.Story, error)
+	InsertBanner(project_id string, story_id string, uid int, banner types.Banner, file multipart.File, fileName string) error
 	InsertView(user_id int, banner_id string) error
 	// UpdateBanner(banner types.Banner) error
 }
 
 func GetStories(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		project_id := chi.URLParam(r, "project_id")
 		story_id := r.URL.Query().Get("story_id")
 		banner_id := r.URL.Query().Get("banner_id")
 		creator := r.URL.Query().Get("creator")
 		offset := r.URL.Query().Get("offset")
 		lang := r.URL.Query().Get("lang")
 
-		stories, err := store.SelectStories(story_id, banner_id, creator, offset, lang)
+		stories, err := store.SelectStories(project_id, story_id, banner_id, creator, offset, lang)
 		if err != nil {
 			http.Error(w, "Failed to get stories", http.StatusInternalServerError)
 			slog.Error("Failed to get stories: " + err.Error())
@@ -49,27 +51,31 @@ func GetStories(store Storage) http.HandlerFunc {
 func NewBanner(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		story_id := r.URL.Query().Get("story_id")
+		project_id := chi.URLParam(r, "project_id")
 		// Limit max input length
 		if err := r.ParseMultipartForm(64 << 20); err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Failed to read file", http.StatusBadRequest)
 		}
-		file, _, err := r.FormFile("file")
+		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Failed to read file", http.StatusBadRequest)
 		}
 		defer file.Close()
 
-		var banners []types.Banner
+		var langs []types.BannerLang
 
 		// Unmarshal the banner
-		data := r.FormValue("data")
-		if err := json.Unmarshal([]byte(data), &banners); err != nil {
+		langsRaw := r.FormValue("langs")
+
+		if err := json.Unmarshal([]byte(langsRaw), &langs); err != nil {
 			http.Error(w, "Failed to unmarshal banner", http.StatusInternalServerError)
 			slog.Error("Failed to unmarshal banner: " + err.Error())
 			return
 		}
+
+		banner := types.Banner{Langs: langs}
 
 		creds, err := auth.ExtractCredentials(r.Header.Get("Authorization"))
 		if err != nil {
@@ -78,21 +84,12 @@ func NewBanner(store Storage) http.HandlerFunc {
 			return
 		}
 
-		id, err := store.InsertBanner(story_id, creds.ID, banners)
-		if err != nil {
+		if err := store.InsertBanner(project_id, story_id, creds.ID, banner, file, fileHeader.Filename); err != nil {
 			http.Error(w, "Failed to insert banner", http.StatusInternalServerError)
 			slog.Error("Failed to insert banner: " + err.Error())
 			return
 		}
 
-		// TODO: replace with remote storage
-		newFile, _ := os.Create("../files/images/banners/banner" + strconv.Itoa(int(id)) + ".png")
-		defer newFile.Close()
-		if _, err := io.Copy(newFile, file); err != nil {
-			http.Error(w, "Failed to save file", http.StatusInternalServerError)
-			slog.Error("Failed to save file: " + err.Error())
-			return
-		}
 		w.WriteHeader(http.StatusCreated)
 	}
 }

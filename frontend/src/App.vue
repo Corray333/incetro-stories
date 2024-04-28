@@ -1,34 +1,13 @@
 <script setup>
 import { onBeforeMount } from 'vue'
-import axios from 'axios'
 import NavBar from './components/NavBar.vue'
+import { refreshTokens } from './utils/helpers'
 
-function getCookie(name) {
- const value = `; ${document.cookie}`;
- const parts = value.split(`; ${name}=`);
- if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
-const refreshTokens = async()=>{
-    try {
-        let {data} = await axios.get('http://localhost:3001/api/users/refresh', {
-            headers:{
-                'Refresh': getCookie('Refresh'),
-            }
-        })
-
-        document.cookie = `Authorization=${data.authorization};`
-        document.cookie = `Refresh=${data.refresh};`
-    } catch (error) {
-        if (error.response.status == 401){
-            await refreshTokens()
-            loadContent()
-        }
-        else console.log(error)
-    }
-}
 onBeforeMount(()=>{
-  refreshTokens()
+  if (document.cookie!=''){
+    refreshTokens()
+  }
 })
 
 </script>

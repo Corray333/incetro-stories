@@ -70,7 +70,7 @@ const login = async ()=>{
             })
             document.cookie = `Authorization=${data.authorization};`
             document.cookie = `Refresh=${data.refresh};`
-            router.push('/home')
+            router.push('/projects')
         }
         else console.log("Invalid action")
     } catch (error) {

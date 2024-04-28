@@ -15,8 +15,8 @@ func Init(db *sqlx.DB, router *chi.Mux) error {
 	router.Group(func(subRouter chi.Router) {
 		// subRouter.Use(auth.NewMiddleware())
 
-		subRouter.Get("/api/stories", transport.GetStories(store))
-		subRouter.Post("/api/banners", transport.NewBanner(store))
+		subRouter.Get("/api/projects/{project_id}/stories", transport.GetStories(store))
+		subRouter.Post("/api/projects/{project_id}/banners", transport.NewBanner(store))
 		subRouter.Post("/api/stories/views", transport.NewView(store))
 
 		// subRouter.Post("/api/banners/{id}/media", transport.UpdateBannerMedia(store))

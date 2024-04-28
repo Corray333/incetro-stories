@@ -47,6 +47,14 @@
     @apply opacity-50;
     pointer-events: none;
   }
+
+  .tip{
+    @apply absolute left-full ml-2 z-30 bg-gray-900 p-2 w-fit rounded-xl scale-0 duration-300 origin-left;
+  }
+}
+
+.gradient{
+  background: linear-gradient( rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.9) 100%);
 }
 
 

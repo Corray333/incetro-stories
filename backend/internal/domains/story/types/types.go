@@ -1,9 +1,20 @@
 package types
 
+type Project struct {
+	ID          int    `json:"id" db:"project_id"`
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description" db:"description"`
+	CreatedAt   string `json:"created_at" db:"created_at"`
+	Creator     int    `json:"creator" db:"creator"`
+	Cover       string `json:"cover" db:"cover"`
+	ProjectID   int    `json:"project_id" db:"project_id"`
+}
+
 type Banner struct {
-	ID        int          `json:"id,omitempty" db:"banner_id"`
+	ID        int          `json:"id" db:"banner_id"`
 	Langs     []BannerLang `json:"langs" db:"langs"`
-	CreatedAt string       `json:"created_at,omitempty" db:"created_at"`
+	CreatedAt string       `json:"created_at" db:"created_at"`
+	MediaURL  string       `json:"media_url" db:"media_url"`
 	Views     int          `json:"views"`
 }
 
@@ -14,8 +25,8 @@ type BannerLang struct {
 }
 
 type Story struct {
-	ID        int      `json:"id,omitempty" db:"story_id"`
-	CreatedAt string   `json:"created_at,omitempty" db:"created_at"`
-	Banners   []Banner `json:"banners,omitempty" db:"banners"`
-	Creator   int      `json:"creator,omitempty" db:"creator"`
+	ID        int      `json:"id" db:"story_id"`
+	CreatedAt string   `json:"created_at" db:"created_at"`
+	Banners   []Banner `json:"banners" db:"banners"`
+	Creator   int      `json:"creator" db:"creator"`
 }

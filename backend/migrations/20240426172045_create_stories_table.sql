@@ -6,13 +6,16 @@ CREATE TABLE IF NOT EXISTS public.stories (
     ), 
     created_at BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP), 
     creator bigint NOT NULL, 
+    project_id BIGINT NOT NULL,
     CONSTRAINT stories_pkey PRIMARY KEY (story_id)
 );
 CREATE INDEX IF NOT EXISTS stories_creator_idx ON public.stories (creator);
+CREATE INDEX IF NOT EXISTS stories_project_id_idx ON public.stories (project_id);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS public.stories;
 DROP INDEX IF EXISTS stories_creator_idx;
+DROP INDEX IF EXISTS stories_project_id_idx;
+DROP TABLE IF EXISTS public.stories;
 -- +goose StatementEnd

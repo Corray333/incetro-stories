@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Corray333/univer_cs/internal/config"
+	"github.com/Corray333/univer_cs/internal/domains/project"
 	"github.com/Corray333/univer_cs/internal/domains/story"
 	"github.com/Corray333/univer_cs/internal/domains/user"
 	"github.com/Corray333/univer_cs/internal/storage"
@@ -45,12 +46,14 @@ func NewApp(cfg *config.Config) *App {
 	if err := user.Init(db, router); err != nil {
 		slog.Error(err.Error())
 		panic(err)
-
 	}
 	if err := story.Init(db, router); err != nil {
 		slog.Error(err.Error())
 		panic(err)
-
+	}
+	if err := project.Init(db, router); err != nil {
+		slog.Error(err.Error())
+		panic(err)
 	}
 
 	return &App{

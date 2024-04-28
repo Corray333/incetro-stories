@@ -1,9 +1,10 @@
 <script setup>
 import {ref, onBeforeMount} from 'vue'
 import {useRoute} from 'vue-router'
-import StoryCard from '../components/StoryCard.vue';
-import StoryModal from '../components/StoryModal.vue';
+import StoryCard from '../components/StoryCard.vue'
+import StoryModal from '../components/StoryModal.vue'
 import axios from 'axios'
+import { getCookie, refreshTokens } from '../utils/helpers'
 
 const route = useRoute()
 
@@ -15,26 +16,6 @@ const pickStory = (story)=>{
 }
 
 
-function getCookie(name) {
- const value = `; ${document.cookie}`;
- const parts = value.split(`; ${name}=`);
- if (parts.length === 2) return parts.pop().split(';').shift();
-}
-
-const refreshTokens = async()=>{
-    try {
-        let {data} = await axios.get('http://localhost:3001/users/refresh', {
-            headers:{
-                'Refresh': getCookie('Refresh'),
-            }
-        })
-
-        document.cookie = `Authorization=${data.authorization};`
-        document.cookie = `Refresh=${data.refresh};`
-    } catch (error) {
-        console.log(error)
-    }
-}
 
 const loadContent = async ()=>{
     try {
