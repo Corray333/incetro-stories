@@ -4,7 +4,7 @@ import { Icon } from '@iconify/vue'
 import NewProjectModal from '../components/NewProjectModal.vue'
 import ProjectCard from '../components/ProjectCard.vue'
 import axios from 'axios'
-import { getCookie, refreshTokens } from '../utils/helpers'
+import {  refreshTokens } from '../utils/helpers'
 
 const showNewProjectModal = ref(false)
 
@@ -14,7 +14,7 @@ const loadProjects = async () => {
     try {
         let { data } = await axios.get(`http://localhost:3001/api/projects`, {
             headers: {
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
         projects.value = data.projects

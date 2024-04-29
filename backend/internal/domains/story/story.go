@@ -20,7 +20,7 @@ func Init(db *sqlx.DB, router *chi.Mux) error {
 		subRouter.Post("/api/stories/views", transport.NewView(store))
 
 		// subRouter.Post("/api/banners/{id}/media", transport.UpdateBannerMedia(store))
-		// subRouter.Put("/api/banners/{id}", transport.UpdateBanner(store))
+		subRouter.Put("/api/banners", transport.UpdateBanner(store))
 	})
 	fs := http.FileServer(http.Dir("../files/images"))
 	router.Handle("/images/*", http.StripPrefix("/images", fs))

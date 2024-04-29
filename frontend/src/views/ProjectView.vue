@@ -7,7 +7,7 @@ import StoryModalEdit from '../components/StoryModalEdit.vue'
 import { jwtDecode } from "jwt-decode"
 import axios from 'axios'
 import { useRoute } from 'vue-router'
-import { getCookie, refreshTokens } from '../utils/helpers'
+import {  refreshTokens } from '../utils/helpers'
 
 const route = useRoute()
 const project_id = route.params.project_id
@@ -36,7 +36,7 @@ const loadContent = async () => {
     try {
         let { data } = await axios.get(`http://localhost:3001/api/projects/${project_id}/stories`, {
             headers: {
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
 
@@ -54,7 +54,7 @@ const loadProject = async () => {
     try {
         let { data } = await axios.get(`http://localhost:3001/api/projects/${project_id}`, {
             headers: {
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
         projects.value = data.projects
@@ -81,7 +81,7 @@ onBeforeMount(() => {
 <template>
     <section class="flex flex-col gap-5">
         <transition>
-            <StoryModalEdit v-if="storyPick" :story="storyPick" :project_id="project_id" @close="storyPick = null" />
+            <StoryModalEdit v-if="storyPick" :story="storyPick" :project_id="project_id" @reload="loadContent" @close="storyPick = null" />
         </transition>
         <Transition>
             <NewBanner v-if="newBannerOpened" :story_id="storyId" :project_id="project_id" @close="closeNewBanner" @reload="loadContent" />

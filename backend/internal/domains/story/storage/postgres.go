@@ -54,7 +54,7 @@ func (s *Storage) InsertBanner(project_id string, storyId string, uid int, banne
 	} else {
 		// Check if the story exists
 		story_id, _ = strconv.Atoi(storyId)
-		rows, err := tx.Queryx(`SELECT story_id FROM stories JOIN project_user on stories.project_id = project_user.project_id WHERE story_id = $1 AND creator = $2;`, story_id, uid)
+		rows, err := s.db.Query(`SELECT story_id FROM stories JOIN project_user on stories.project_id = project_user.project_id WHERE story_id = $1 AND creator = $2;`, story_id, uid)
 		if err != nil {
 			return err
 		}
@@ -64,17 +64,12 @@ func (s *Storage) InsertBanner(project_id string, storyId string, uid int, banne
 	}
 
 	var banner_id int
-	rows, err := tx.Queryx(`INSERT INTO banners VALUES (DEFAULT, DEFAULT) RETURNING banner_id;`)
+	row := tx.QueryRowx(`INSERT INTO banners DEFAULT VALUES RETURNING banner_id;`)
+	err = row.Scan(&banner_id)
 	if err != nil {
 		return err
 	}
-	for rows.Next() {
-		err := rows.Scan(&banner_id)
-		if err != nil {
-			return err
-		}
-	}
-	defer rows.Close()
+
 	_, err = tx.Exec(`
 		INSERT INTO story_banner (story_id, banner_id) VALUES ($1, $2);
 	`, story_id, banner_id)
@@ -122,8 +117,9 @@ func (s *Storage) SelectStories(project_id, story_id, banner_id, creator, offset
 		BannerID        int    `db:"banner_id"`
 		BannerTitle     string `db:"banner_title"`
 		Description     string `db:"description"`
-		StoryCreatedAt  string `db:"story_created_at"`
-		BannerCreatedAt string `db:"banner_created_at"`
+		StoryCreatedAt  int    `db:"story_created_at"`
+		ExpiresAt       int    `db:"expires_at"`
+		BannerCreatedAt int    `db:"banner_created_at"`
 		MediaURL        string `db:"media_url"`
 		Creator         int    `db:"creator"`
 		UserID          int    `db:"user_id"`
@@ -146,7 +142,7 @@ func (s *Storage) SelectStories(project_id, story_id, banner_id, creator, offset
 		where["lang"] = lang
 	}
 
-	query := squirrel.Select("stories.story_id, banners.banner_id, banner_lang.title AS banner_title, banner_lang.description, lang, stories.created_at AS story_created_at, banners.created_at AS banner_created_at, media_url, stories.creator").
+	query := squirrel.Select("stories.story_id, banners.banner_id, expires_at, banner_lang.title AS banner_title, banner_lang.description, lang, stories.created_at AS story_created_at, banners.created_at AS banner_created_at, media_url, stories.creator").
 		From("story_banner").
 		Join("banners on banners.banner_id = story_banner.banner_id ").
 		Join("stories ON stories.story_id = story_banner.story_id").
@@ -166,6 +162,7 @@ func (s *Storage) SelectStories(project_id, story_id, banner_id, creator, offset
 		}
 		var story types.Story
 		story.ID = r.StoriesID
+		story.ExpiresAt = r.ExpiresAt
 		story.Creator = r.Creator
 		story.CreatedAt = r.StoryCreatedAt
 
@@ -215,12 +212,49 @@ func (s *Storage) UpdateBannerMedia(bannerId string, mediaURL string) error {
 	return nil
 }
 
-// func (s *Storage) UpdateBanner(banner types.Banner) error {
-// 	_, err := s.db.Queryx(`
-// 		UPDATE banners SET title = $1, description = $2 WHERE banner_id = $3;
-// 	`, banner.Title, banner.Description, banner.ID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (s *Storage) UpdateBanner(banner types.Banner, expires_at string, file multipart.File, fileName string) error {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for _, lang := range banner.Langs {
+		_, err := tx.Exec(`
+			INSERT INTO banner_lang (banner_id, lang, title, description) VALUES ($1, $2, $3, $4) ON CONFLICT (banner_id, lang) DO UPDATE SET title = $3, description = $4;
+		`, banner.ID, lang.Lang, lang.Title, lang.Description)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Update expires_at
+	if _, err = tx.Exec(`UPDATE stories SET expires_at = $1 WHERE story_id = (SELECT story_id FROM story_banner WHERE banner_id = $2);`, expires_at, banner.ID); err != nil {
+		return err
+	}
+
+	if fileName == "" {
+		return tx.Commit()
+	}
+
+	randomStr := ""
+	for i := 0; i < 10; i++ {
+		randomStr += strconv.Itoa(rand.Intn(10))
+	}
+
+	fileName = strconv.Itoa(banner.ID) + "-" + randomStr + filepath.Ext(fileName)
+
+	newFile, _ := os.Create("../files/images/banners/banner" + fileName)
+	defer newFile.Close()
+	if _, err := io.Copy(newFile, file); err != nil {
+		return err
+	}
+
+	// Update the media url of the banner
+	// TODO: replace with url from .env
+	if _, err = tx.Exec(`UPDATE banners SET media_url = $1 WHERE banner_id = $2;`, "http://localhost:3001/images/banners/banner"+fileName, banner.ID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}

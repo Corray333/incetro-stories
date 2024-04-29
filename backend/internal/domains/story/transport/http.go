@@ -19,7 +19,7 @@ type Storage interface {
 	SelectStories(project_id, story_id, banner_id, creator, offset, lang string) ([]types.Story, error)
 	InsertBanner(project_id string, story_id string, uid int, banner types.Banner, file multipart.File, fileName string) error
 	InsertView(user_id int, banner_id string) error
-	// UpdateBanner(banner types.Banner) error
+	UpdateBanner(banner types.Banner, expires_at string, file multipart.File, fileName string) error
 }
 
 func GetStories(store Storage) http.HandlerFunc {
@@ -127,31 +127,35 @@ func NewView(store Storage) http.HandlerFunc {
 	}
 }
 
-// func UpdateBanner(store Storage) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		body, err := io.ReadAll(r.Body)
-// 		if err != nil {
-// 			http.Error(w, "Failed reading body", http.StatusInternalServerError)
-// 			slog.Error("Failed reading body: " + err.Error())
-// 			return
-// 		}
-// 		var banner types.Banner
-// 		if err := json.Unmarshal(body, &banner); err != nil {
-// 			http.Error(w, "Failed unmarshalling body", http.StatusInternalServerError)
-// 			slog.Error("Failed unmarshalling body: " + err.Error())
-// 			return
-// 		}
-// 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
-// 		if err != nil {
-// 			http.Error(w, "Failed to get banner id", http.StatusInternalServerError)
-// 			slog.Error("Failed to get banner id: " + err.Error())
-// 			return
-// 		}
-// 		banner.ID = id
-// 		if err = store.UpdateBanner(banner); err != nil {
-// 			http.Error(w, "Failed to update banner", http.StatusInternalServerError)
-// 			slog.Error("Failed to update banner: " + err.Error())
-// 			return
-// 		}
-// 	}
-// }
+func UpdateBanner(store Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := r.FormValue("banner")
+		var banner types.Banner
+		if err := json.Unmarshal([]byte(body), &banner); err != nil {
+			http.Error(w, "Failed unmarshalling body", http.StatusInternalServerError)
+			slog.Error("Failed unmarshalling body: " + err.Error())
+			return
+		}
+
+		expires_at := r.FormValue("expires_at")
+
+		file, fileHeader, err := r.FormFile("file")
+		fileName := ""
+		if err != nil {
+			if err.Error() != "http: no such file" {
+				slog.Error(err.Error())
+				http.Error(w, "Failed to read file", http.StatusBadRequest)
+				return
+			}
+		} else {
+			fileName = fileHeader.Filename
+			defer file.Close()
+		}
+
+		if err := store.UpdateBanner(banner, expires_at, file, fileName); err != nil {
+			http.Error(w, "Failed to update banner", http.StatusInternalServerError)
+			slog.Error("Failed to update banner: " + err.Error())
+			return
+		}
+	}
+}

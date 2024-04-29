@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import axios from 'axios'
-import { getCookie } from '../utils/helpers'
 
 const emits = defineEmits(['reload'])
 
@@ -39,7 +38,7 @@ const createProject = async ()=>{
         await axios.post("http://localhost:3001/api/projects", formData, {
             headers: {
                 'Content-Type':'multipart/form-data',
-                'Authorization': getCookie("Authorization")
+                'Authorization': localStorage.getItem('Authorization')
             }
         })
         emits('reload')

@@ -8,14 +8,15 @@ function getCookie(name) {
 
 const refreshTokens = async () => {
     try {
+        console.log(localStorage.getItem('Refresh'))
         let { data } = await axios.get('http://localhost:3001/api/users/refresh', {
             headers: {
-                'Refresh': getCookie('Refresh'),
+                'Refresh': localStorage.getItem('Refresh'),
             }
         })
 
-        document.cookie = `Authorization=${data.authorization};`
-        document.cookie = `Refresh=${data.refresh};`
+        localStorage.setItem('Authorization', data.authorization)
+        localStorage.setItem('Refresh', data.refresh)
     } catch (error) {
         alert('Error refreshing tokens')
     }

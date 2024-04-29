@@ -2,7 +2,7 @@
 import { Icon } from '@iconify/vue'
 import {ref, onBeforeMount} from 'vue'
 import axios from 'axios'
-import { getCookie, refreshTokens } from '../utils/helpers'
+import {  refreshTokens } from '../utils/helpers'
 
 
 
@@ -18,7 +18,7 @@ const loadUserInfo = async ()=>{
         let uid = props.story.creator
         let {data} = await axios.get(`http://localhost:3001/api/users/${uid}`, {
             headers:{
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
         

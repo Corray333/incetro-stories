@@ -4,8 +4,8 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const logout = () => {
-    document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-    document.cookie = "Refresh=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    localStorage.removeItem('Authorization')
+    localStorage.removeItem('Refresh')
     router.push('/login')
 }
 

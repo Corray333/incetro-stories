@@ -59,8 +59,8 @@ const login = async ()=>{
                 email: email.value,
                 password: password.value,
             })
-            document.cookie = `Authorization=${data.authorization};`
-            document.cookie = `Refresh=${data.refresh};`
+            localStorage.setItem('Authorization', data.authorization)
+            localStorage.setItem('Refresh', data.refresh)
             router.push('/home')
         } else if (action.value == "Sign up"){
             let {data} = await axios.post('http://localhost:3001/api/users/signup', {
@@ -68,8 +68,8 @@ const login = async ()=>{
                 email: email.value,
                 password: password.value,
             })
-            document.cookie = `Authorization=${data.authorization};`
-            document.cookie = `Refresh=${data.refresh};`
+            localStorage.setItem('Authorization', data.authorization)
+            localStorage.setItem('Refresh', data.refresh)
             router.push('/projects')
         }
         else console.log("Invalid action")

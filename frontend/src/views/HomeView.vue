@@ -3,7 +3,7 @@ import {ref, onBeforeMount} from 'vue'
 import StoryCard from '../components/StoryCard.vue';
 import StoryModal from '../components/StoryModal.vue';
 import axios from 'axios'
-import { getCookie, refreshTokens } from '../utils/helpers'
+import {  refreshTokens } from '../utils/helpers'
 
 const stories = ref([])
 const storyPick = ref(null)
@@ -19,7 +19,7 @@ const loadContent = async ()=>{
     try {
         let {data} = await axios.get('http://localhost:3001/api/stories', {
             headers:{
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
         

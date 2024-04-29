@@ -4,7 +4,7 @@ import {useRoute} from 'vue-router'
 import StoryCard from '../components/StoryCard.vue'
 import StoryModal from '../components/StoryModal.vue'
 import axios from 'axios'
-import { getCookie, refreshTokens } from '../utils/helpers'
+import {  refreshTokens } from '../utils/helpers'
 
 const route = useRoute()
 
@@ -21,7 +21,7 @@ const loadContent = async ()=>{
     try {
         let {data} = await axios.get(`http://localhost:3001/stories?creator=${route.params.uid}`, {
             headers:{
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
         
@@ -41,7 +41,7 @@ const loadUserInfo = async ()=>{
     try {
         let {data} = await axios.get(`http://localhost:3001/api/users/${route.params.uid}`, {
             headers:{
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
         

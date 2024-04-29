@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue'
 import { ref, onBeforeMount } from 'vue'
 import { jwtDecode } from "jwt-decode"
 import axios from 'axios'
-import { getCookie, refreshTokens } from '../utils/helpers'
+import {  refreshTokens } from '../utils/helpers'
 
 
 const avatarUrl = ref('')
@@ -15,11 +15,11 @@ const user = ref({})
 
 const loadUserInfo = async () => {
     try {
-        let uid = jwtDecode(getCookie('Authorization')).id
+        let uid = jwtDecode(localStorage.getItem('Authorization')).id
         console.log(uid)
         let { data } = await axios.get(`http://localhost:3001/api/users/${uid}`, {
             headers: {
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
 
@@ -60,11 +60,11 @@ const saveChanges = async () => {
     formData.append('username', user.value.username)
 
     try {
-        let url = "http://localhost:3001/api/users/" + jwtDecode(getCookie('Authorization')).id
+        let url = "http://localhost:3001/api/users/" + jwtDecode(localStorage.getItem('Authorization')).id
         await axios.put(url, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
-                'Authorization': getCookie("Authorization")
+                'Authorization': localStorage.getItem('Authorization')
             }
         })
         location.reload()

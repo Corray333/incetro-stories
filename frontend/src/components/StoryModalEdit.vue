@@ -3,11 +3,16 @@ import { Icon } from '@iconify/vue'
 import { ref, onBeforeMount, computed } from 'vue'
 import axios from 'axios'
 import LangPicker from './LangPicker.vue'
-import { getCookie, refreshTokens } from '../utils/helpers'
+import { refreshTokens } from '../utils/helpers'
+
+import VueDatePicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
 
 
 
 const props = defineProps(['story', 'project_id'])
+const emits = defineEmits(['reload'])
+const expires_at = ref(new Date())
 
 const current = ref(0)
 const selected_lang = ref("")
@@ -27,7 +32,7 @@ const loadUserInfo = async () => {
         let uid = props.story.creator
         let { data } = await axios.get(`http://localhost:3001/api/users/${uid}`, {
             headers: {
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
 
@@ -44,25 +49,49 @@ const loadUserInfo = async () => {
 onBeforeMount(() => {
     loadUserInfo()
     selected_lang.value = props.story.banners[current.value].langs[0].lang
+    expires_at.value = new Date(props.story.expires_at * 1000)
 })
 
 const updateBanner = async (id) => {
+    const formData = new FormData()
+    formData.append('file', file.value)
+    formData.append('expires_at', Math.floor(expires_at.value.getTime() / 1000))
+    formData.append('banner', JSON.stringify(props.story.banners[id]))
+
     try {
-        await axios.put(`http://localhost:3001/api/projects/${project_id}banners/${props.story.banners[id].id}`, {
-            data:JSON.stringify(props.story.banners[id])
-        }, {
+        await axios.put(`http://localhost:3001/api/banners`,
+            formData, {
             headers: {
-                'Authorization': getCookie('Authorization'),
+                'Authorization': localStorage.getItem('Authorization'),
             }
         })
-        location.reload()
+
+        emits('reload')
     } catch (error) {
         if (error.status == 401) {
             await refreshTokens()
-            loadUserInfo()
+            updateBanner()
         }
         else console.log(error)
     }
+}
+
+const newPhotoUrl = ref('')
+const file = ref(null)
+
+const handleFileUpload = (event) => {
+    console.log('test')
+    if (event.target.files[0].size > 5000 * 1024) {
+        fileMsg.value = "File is too large"
+        return
+    }
+    file.value = event.target.files[0]
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+        newPhotoUrl.value = e.target.result
+    }
+    reader.readAsDataURL(event.target.files[0])
 }
 
 
@@ -78,15 +107,16 @@ const updateBanner = async (id) => {
                     <div v-if="story.banners.length > 1"
                         class="button_container absolute z-20 h-full flex items-center">
                         <button
-                            @click="current = (current - 1) % story.banners.length; current < 0 ? current = story.banners.length - 1 : pass"
+                            @click="file = null; selected_lang = story.banners[(current - 1) % story.banners.length].langs[0].lang; current = (current - 1) % story.banners.length; current < 0 ? current = story.banners.length - 1 : pass"
                             type="button" class="arrow-button w-fit">
                             <Icon icon="iconamoon:arrow-left-2-bold" />
                         </button>
                     </div>
                     <div v-if="story.banners.length > 1"
                         class="button_container  absolute z-20 right-0 h-full flex items-center">
-                        <button @click="current = (current + 1) % story.banners.length" type="button"
-                            class="arrow-button w-fit">
+                        <button
+                            @click="file = null; selected_lang = story.banners[(current + 1) % story.banners.length].langs[0].lang; current = (current + 1) % story.banners.length"
+                            type="button" class="arrow-button w-fit">
                             <Icon icon="iconamoon:arrow-right-2-bold" />
                         </button>
                     </div>
@@ -95,7 +125,13 @@ const updateBanner = async (id) => {
                         <div class="h-full banner  w-full min-w-full relative text-white flex items-end"
                             v-for="(banner, i) of story.banners" :key="i"
                             :style="`z-index:${i == current ? '100' : 'initial'}`">
-                            <img :src="banner.media_url" alt=""
+                            <input @input="changed = true" type="file" id="fileInput" class="hidden"
+                                @change="handleFileUpload" />
+                            <label for="fileInput"
+                                class="text-center absolute mx-auto bg-gray-900 bg-opacity-80 h-full w-full flex items-center justify-center text-5xl text-green-400 opacity-0 duration-300 cursor-pointe hover:opacity-100">
+                                <Icon icon="mdi:camera" />
+                            </label>
+                            <img :src="file ? newPhotoUrl : banner.media_url" alt=""
                                 class="w-full h-full object-contain duration-300 bg-black">
                         </div>
                     </div>
@@ -104,6 +140,13 @@ const updateBanner = async (id) => {
                     <img :src="user.avatar" alt="" class="w-16 h-16 object-cover rounded-full">
                     <div class="w-full h-full flex flex-col rounded-xl">
                         <i class="opacity-50 text-xs">{{ user.username }}</i>
+                        <i class="opacity-50 text-xs">Created at:{{ new Date(story.created_at * 1000) }}</i>
+                        <span class="flex gap-2 items-center">
+                            <i class="opacity-50 text-xs">Expires at:</i>
+                            <div class="w-fit">
+                                <VueDatePicker v-model="expires_at" class=""/>
+                            </div>
+                        </span>
                         <div class="dropdown relative w-full">
                             <button @click="showLangs = !showLangs" class="flex items-center">
                                 <div class="duration-300" :style="showLangs ? '' : `transform:rotate(-90deg);`">
@@ -120,10 +163,12 @@ const updateBanner = async (id) => {
                             </Transition>
                         </div>
                         <h2 class=" font-semibold">Title:</h2>
-                        <input class=" bg-slate-100 p-2 rounded-md" v-model="story.banners[current].langs[selected_lang_id].title" placeholder="Title">
+                        <input class=" bg-slate-100 p-2 rounded-md"
+                            v-model="story.banners[current].langs[selected_lang_id].title" placeholder="Title">
                         <h2 class=" font-semibold">Description:</h2>
                         <textarea class="text-input text-black w-full bg-slate-100 p-2 rounded-md" rows="20"
-                            v-model="story.banners[current].langs[selected_lang_id].description" placeholder="Description"></textarea>
+                            v-model="story.banners[current].langs[selected_lang_id].description"
+                            placeholder="Description"></textarea>
                         <button class="button absolute bottom-0 right-0 m-5 w-fit px-5"
                             @click="updateBanner(current)">Save</button>
                     </div>

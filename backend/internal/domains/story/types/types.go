@@ -13,7 +13,7 @@ type Project struct {
 type Banner struct {
 	ID        int          `json:"id" db:"banner_id"`
 	Langs     []BannerLang `json:"langs" db:"langs"`
-	CreatedAt string       `json:"created_at" db:"created_at"`
+	CreatedAt int          `json:"created_at" db:"created_at"`
 	MediaURL  string       `json:"media_url" db:"media_url"`
 	Views     int          `json:"views"`
 }
@@ -26,7 +26,8 @@ type BannerLang struct {
 
 type Story struct {
 	ID        int      `json:"id" db:"story_id"`
-	CreatedAt string   `json:"created_at" db:"created_at"`
+	CreatedAt int      `json:"created_at" db:"created_at"`
+	ExpiresAt int      `json:"expires_at" db:"expires_at"`
 	Banners   []Banner `json:"banners" db:"banners"`
 	Creator   int      `json:"creator" db:"creator"`
 }
