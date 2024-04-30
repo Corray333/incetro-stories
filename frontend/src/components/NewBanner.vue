@@ -55,7 +55,7 @@ const createBanner = async () => {
     formData.append('file', file.value)
     formData.append('langs', JSON.stringify(langs.value))
     try {
-        let url = `http://localhost:3001/api/projects/${props.project_id}/banners`
+        let url = `/api/projects/${props.project_id}/banners`
         if (props.story_id) url += `?story_id=${props.story_id}`
         await axios.post(url, formData, {
             headers: {

@@ -12,7 +12,7 @@ const projects = ref([])
 
 const loadProjects = async () => {
     try {
-        let { data } = await axios.get(`http://localhost:3001/api/projects`, {
+        let { data } = await axios.get(`/api/projects`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }

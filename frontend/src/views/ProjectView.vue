@@ -34,7 +34,7 @@ const projects = ref([])
 
 const loadContent = async () => {
     try {
-        let { data } = await axios.get(`http://localhost:3001/api/projects/${project_id}/stories`, {
+        let { data } = await axios.get(`/api/projects/${project_id}/stories`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -52,7 +52,7 @@ const loadContent = async () => {
 
 const loadProject = async () => {
     try {
-        let { data } = await axios.get(`http://localhost:3001/api/projects/${project_id}`, {
+        let { data } = await axios.get(`/api/projects/${project_id}`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -81,12 +81,13 @@ onBeforeMount(() => {
 <template>
     <section class="flex flex-col gap-5">
         <transition>
-            <StoryModalEdit v-if="storyPick" :story="storyPick" :project_id="project_id" @reload="loadContent" @close="storyPick = null" />
+            <StoryModalEdit v-if="storyPick" :story="storyPick" :project_id="project_id" @reload="loadContent; storyPick=null" @close="storyPick = null" />
         </transition>
         <Transition>
             <NewBanner v-if="newBannerOpened" :story_id="storyId" :project_id="project_id" @close="closeNewBanner" @reload="loadContent" />
         </Transition>
         <div class="header w-full flex gap-2 justify-center text-gray-900 relative items-center">
+            <img :src="projects[0]?.cover" alt="" class=" w-12 h-12 object-cover rounded-full">
             <h1 class="title">{{ projects[0]?.name }}</h1>
             <button class="button w-fit" @click="newBannerOpened = true">
                 <Icon icon="mdi:plus" />

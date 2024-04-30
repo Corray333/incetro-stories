@@ -35,7 +35,7 @@ const createProject = async ()=>{
     }))
 
     try{
-        await axios.post("http://localhost:3001/api/projects", formData, {
+        await axios.post("/api/projects", formData, {
             headers: {
                 'Content-Type':'multipart/form-data',
                 'Authorization': localStorage.getItem('Authorization')

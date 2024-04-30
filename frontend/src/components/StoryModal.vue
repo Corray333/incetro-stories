@@ -16,7 +16,7 @@ const user = ref({})
 const loadUserInfo = async ()=>{
     try {
         let uid = props.story.creator
-        let {data} = await axios.get(`http://localhost:3001/api/users/${uid}`, {
+        let {data} = await axios.get(`/api/users/${uid}`, {
             headers:{
                 'Authorization': localStorage.getItem('Authorization'),
             }

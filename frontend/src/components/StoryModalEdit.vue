@@ -30,7 +30,7 @@ const user = ref({})
 const loadUserInfo = async () => {
     try {
         let uid = props.story.creator
-        let { data } = await axios.get(`http://localhost:3001/api/users/${uid}`, {
+        let { data } = await axios.get(`/api/users/${uid}`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -59,7 +59,7 @@ const updateBanner = async (id) => {
     formData.append('banner', JSON.stringify(props.story.banners[id]))
 
     try {
-        await axios.put(`http://localhost:3001/api/banners`,
+        await axios.put(`/api/banners`,
             formData, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),

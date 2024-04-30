@@ -39,7 +39,7 @@ const user = ref({})
 
 const loadUserInfo = async ()=>{
     try {
-        let {data} = await axios.get(`http://localhost:3001/api/users/${route.params.uid}`, {
+        let {data} = await axios.get(`/api/users/${route.params.uid}`, {
             headers:{
                 'Authorization': localStorage.getItem('Authorization'),
             }
