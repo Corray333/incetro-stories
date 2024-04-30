@@ -12,7 +12,7 @@ const projects = ref([])
 
 const loadProjects = async () => {
     try {
-        let { data } = await axios.get(`/api/projects`, {
+        let { data } = await axios.get( `/api/projects`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -36,7 +36,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-    <section>
+    <section class="flex flex-col gap-5">
         <Transition>
             <div v-if="showNewProjectModal" @click.self="showNewProjectModal = false"
                 class="wrapper w-full h-screen absolute left-0 z-40 top-0 backdrop-blur-md flex justify-center items-center">
@@ -49,7 +49,7 @@ onBeforeMount(() => {
                 <Icon @click="showNewProjectModal = true" icon="mdi:plus" />
             </button>
         </div>
-        <section class="projects grid grid-cols-4 gap-5">
+        <section class="projects grid sm:grid-cols-1 l:grid-cols-4 lg:grid-cols-3 md:grid-cols-2  gap-5">
             <ProjectCard v-for="(project, i) in projects" :key="i" :project="project" />
         </section>
 

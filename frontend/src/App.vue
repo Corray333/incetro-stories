@@ -13,7 +13,7 @@ onBeforeMount(()=>{
 </script>
 
 <template>
-  <div class="flex">
+  <div class="sm:flex block">
     <NavBar/>
   <div class="bg-slate-100 w-full min-h-screen p-5 text-gray-900">
     <router-view ></router-view>

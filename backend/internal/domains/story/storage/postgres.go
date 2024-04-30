@@ -101,7 +101,7 @@ func (s *Storage) InsertBanner(project_id string, storyId string, uid int, banne
 
 	// Update the media url of the banner
 	// TODO: replace with url from .env
-	if _, err = tx.Exec(`UPDATE banners SET media_url = $1 WHERE banner_id = $2;`, "http://localhost:3001/images/banners/banner"+fileName, banner_id); err != nil {
+	if _, err = tx.Exec(`UPDATE banners SET media_url = $1 WHERE banner_id = $2;`, "/images/banners/banner"+fileName, banner_id); err != nil {
 		return err
 	}
 
@@ -252,7 +252,7 @@ func (s *Storage) UpdateBanner(banner types.Banner, expires_at string, file mult
 
 	// Update the media url of the banner
 	// TODO: replace with url from .env
-	if _, err = tx.Exec(`UPDATE banners SET media_url = $1 WHERE banner_id = $2;`, "http://localhost:3001/images/banners/banner"+fileName, banner.ID); err != nil {
+	if _, err = tx.Exec(`UPDATE banners SET media_url = $1 WHERE banner_id = $2;`, "/images/banners/banner"+fileName, banner.ID); err != nil {
 		return err
 	}
 

@@ -35,7 +35,7 @@ const createProject = async ()=>{
     }))
 
     try{
-        await axios.post("/api/projects", formData, {
+        await axios.post( `/api/projects`, formData, {
             headers: {
                 'Content-Type':'multipart/form-data',
                 'Authorization': localStorage.getItem('Authorization')
@@ -50,7 +50,7 @@ const createProject = async ()=>{
 </script>
 
 <template>
-    <section class="bg-gray-900 text-white p-5 rounded-xl flex gap-5 items-center">
+    <section class="bg-gray-900 text-white p-5 rounded-xl flex flex-col sm:flex-row gap-5 items-center">
         <div class="profile_photo relative">
             <input type="file" id="fileInput" class="hidden" @change="handleFileUpload" />
             <label for="fileInput"

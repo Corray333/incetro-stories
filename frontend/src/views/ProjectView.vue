@@ -34,7 +34,7 @@ const projects = ref([])
 
 const loadContent = async () => {
     try {
-        let { data } = await axios.get(`/api/projects/${project_id}/stories`, {
+        let { data } = await axios.get( `/api/projects/${project_id}/stories`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -52,7 +52,7 @@ const loadContent = async () => {
 
 const loadProject = async () => {
     try {
-        let { data } = await axios.get(`/api/projects/${project_id}`, {
+        let { data } = await axios.get( `/api/projects/${project_id}`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -94,7 +94,7 @@ onBeforeMount(() => {
             </button>
         </div>
         <p class="text-center">{{ projects[0]?.description }}</p>
-        <div class="stories grid grid-cols-4 gap-5 w-full">
+        <div class="stories grid sm:grid-cols-1 l:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 gap-5 w-full">
             <StoryCardEdit @new-in-story="pickStory" v-for="(story, i) of stories" :key="i" :story="story"
                 @pickStory="storyPick = story" />
         </div>

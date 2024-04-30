@@ -17,7 +17,7 @@ const loadUserInfo = async () => {
     try {
         let uid = jwtDecode(localStorage.getItem('Authorization')).id
         console.log(uid)
-        let { data } = await axios.get(`/api/users/${uid}`, {
+        let { data } = await axios.get( `/api/users/${uid}`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -60,7 +60,7 @@ const saveChanges = async () => {
     formData.append('username', user.value.username)
 
     try {
-        let url = "/api/users/" + jwtDecode(localStorage.getItem('Authorization')).id
+        let url =  `/api/users/` + jwtDecode(localStorage.getItem('Authorization')).id
         await axios.put(url, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',

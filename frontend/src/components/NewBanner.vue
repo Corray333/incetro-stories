@@ -55,7 +55,7 @@ const createBanner = async () => {
     formData.append('file', file.value)
     formData.append('langs', JSON.stringify(langs.value))
     try {
-        let url = `/api/projects/${props.project_id}/banners`
+        let url =  `/api/projects/${props.project_id}/banners`
         if (props.story_id) url += `?story_id=${props.story_id}`
         await axios.post(url, formData, {
             headers: {
@@ -117,7 +117,7 @@ const createBanner = async () => {
         class="modal-wrapper w-screen h-screen absolute z-50 top-0 left-0 backdrop-blur-sm flex justify-center items-center">
         <section class=" w-3/4 overflow-hidden rounded-xl drop-shadow-xl h-3/4">
 
-            <div class="content bg-white grid grid-cols-2 h-full">
+            <div class="content bg-white grid grid-cols-1 lg:grid-cols-2 h-full">
                 <div class="h-full banner  w-full min-w-full relative text-white flex items-end">
                     <input @input="changed = true" type="file" id="fileInput" class="hidden"
                         @change="handleFileUpload" />
