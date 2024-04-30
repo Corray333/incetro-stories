@@ -125,7 +125,7 @@ const createBanner = async () => {
                         class="text-center absolute mx-auto bg-gray-900 bg-opacity-80 h-full w-full flex items-center justify-center text-5xl text-green-400 opacity-0 duration-300 cursor-pointe hover:opacity-100">
                         <Icon icon="mdi:camera" />
                     </label>
-                    <img :src="file ? newPhotoUrl : 'http://localhost:3001/images/banners/no-image.jpg'" alt=""
+                    <img :src="file ? newPhotoUrl : '/images/banners/no-image.jpg'" alt=""
                         class="w-full h-full object-contain duration-300 bg-black">
                 </div>
                 <div class="story_info w-full flex p-5 gap-5 overflow-y-auto relative">

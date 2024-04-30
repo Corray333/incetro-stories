@@ -26,7 +26,7 @@ type Storage interface {
 func SignUp(store *storage.UserStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := types.User{}
-		user.Avatar = "http://localhost:3001/images/avatars/default_avatar.png"
+		user.Avatar = "/images/avatars/default_avatar.png"
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -202,7 +202,7 @@ func UpdateUser(store Storage) http.HandlerFunc {
 				slog.Error("Failed to write file: " + err.Error())
 				return
 			}
-			user.Avatar = "http://localhost:3001/images/avatars/avatar" + strconv.Itoa(int(user.ID)) + ".png"
+			user.Avatar = "images/avatars/avatar" + strconv.Itoa(int(user.ID)) + ".png"
 		}
 		user.Username = r.FormValue("username")
 		if err := store.UpdateUser(user); err != nil {
