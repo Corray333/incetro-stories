@@ -9,7 +9,7 @@ services:
         - 3001:3001
       command: make run
       volumes: # Add this section
-        - ./backend:/go/src/app # Replace with your Go app's path in the container
+        - ./backend:/app # Replace with your Go app's path in the container
       depends_on:
         - db
         - redis

@@ -5,6 +5,7 @@ import axios from 'axios'
 import LangPicker from './LangPicker.vue'
 import { refreshTokens } from '../utils/helpers'
 
+const btnLoading = ref(false)
 
 const emit = defineEmits(['close', 'reload'])
 
@@ -66,7 +67,8 @@ const createBanner = async () => {
         emit('close')
         emit('reload')
     } catch (error) {
-        console.log(error)
+        btnLoading.value = false
+        alert(error.response.data)
     }
 }
 
@@ -74,43 +76,6 @@ const createBanner = async () => {
 
 
 </script>
-
-<!-- <template>
-    <div @click.self="$emit('close')"
-        class="modal-wrapper w-screen h-screen absolute z-50 top-0 left-0 backdrop-blur-sm flex justify-center items-center">
-        <div class="modal flex flex-col bg-gray-900 text-white p-5 rounded-lg items-center gap-2">
-            <h2 class="title">New banner</h2>
-
-            <div class="dropdown relative w-full">
-                <button @click="showLangs = !showLangs" class="flex items-center">
-                    <div class="duration-300" :style="showLangs ? '' : `transform:rotate(-90deg);`">
-                        <Icon icon="iconamoon:arrow-down-2-duotone" />
-                    </div>
-                    Language:{{ selected_lang }}
-                </button>
-                <Transition>
-                    <div v-if="showLangs"
-                        class="dropdown-content flex flex-col gap-2 absolute -left-2 bg-gray-900 p-2 border-white border-2 rounded-lg">
-                        <LangPicker :langs="langs" :selected_lang="selected_lang" @closeLangs="showLangs=false" @selectLang="lang => selected_lang = lang"/>
-                    </div>
-                </Transition>
-            </div>
-            <div v-for="(lang, i) of langs" :key="i">
-                <div v-if="lang.lang == selected_lang" class="flex flex-col gap-2">
-                    <input v-model="lang.title" type="text" class="text-input" placeholder="Title">
-                    <textarea v-model="lang.description" type="text" class="text-input"
-                        placeholder="Description"></textarea>
-                </div>
-            </div>
-            <input type="file" id="fileInput" class="hidden" @change="handleFileUpload" />
-            <label for="fileInput" class="button text-center w-72">
-                <p class="truncate">{{ file != null ? file.name : fileMsg }}</p>
-            </label>
-
-            <button @click="createBanner" class="button">Create</button>
-        </div>
-    </div>
-</template> -->
 
 <template>
     <div @click.self="$emit('close')"
@@ -152,8 +117,8 @@ const createBanner = async () => {
                         <textarea class="text-input text-black w-full bg-slate-100 p-2 rounded-md" rows="20"
                             v-model="langs[selected_lang_id].description"
                             placeholder="Description"></textarea>
-                        <button class="button absolute bottom-0 right-0 m-5 w-fit px-5"
-                            @click="createBanner(current)">Save</button>
+                        <button class="button absolute bottom-0 flex justify-center right-0 m-5 w-fit px-5"
+                            @click.once="btnLoading = true; createBanner(current)"><Icon v-if="btnLoading" icon="line-md:loading-loop" /><p v-else>Create banner</p></button>
                     </div>
                 </div>
             </div>

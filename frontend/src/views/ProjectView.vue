@@ -94,7 +94,7 @@ onBeforeMount(() => {
             </button>
         </div>
         <p class="text-center">{{ projects[0]?.description }}</p>
-        <div class="stories grid sm:grid-cols-1 l:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 gap-5 w-full">
+        <div class="stories grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 md:grid-cols-2 gap-5 w-full">
             <StoryCardEdit @new-in-story="pickStory" v-for="(story, i) of stories" :key="i" :story="story"
                 @pickStory="storyPick = story" />
         </div>

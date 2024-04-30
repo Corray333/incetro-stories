@@ -60,7 +60,7 @@ func (s Storage) InsertProject(uid int, cover multipart.File, project types.Proj
 		return err
 	}
 
-	if _, err = tx.Exec("UPDATE projects SET cover = $1 WHERE project_id = $2", "images/projects/project"+fileName, project_id); err != nil {
+	if _, err = tx.Exec("UPDATE projects SET cover = $1 WHERE project_id = $2", "/api/images/projects/project"+fileName, project_id); err != nil {
 		return err
 	}
 

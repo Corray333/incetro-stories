@@ -49,7 +49,7 @@ onBeforeMount(() => {
                 <Icon @click="showNewProjectModal = true" icon="mdi:plus" />
             </button>
         </div>
-        <section class="projects grid sm:grid-cols-1 l:grid-cols-4 lg:grid-cols-3 md:grid-cols-2  gap-5">
+        <section class="projects grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 md:grid-cols-2  gap-5">
             <ProjectCard v-for="(project, i) in projects" :key="i" :project="project" />
         </section>
 

@@ -23,7 +23,7 @@ func Init(db *sqlx.DB, router *chi.Mux) error {
 		subRouter.Put("/api/banners", transport.UpdateBanner(store))
 	})
 	fs := http.FileServer(http.Dir("../files/images"))
-	router.Handle("/images/*", http.StripPrefix("/images", fs))
+	router.Handle("/api/images/*", http.StripPrefix("/api/images", fs))
 
 	return nil
 }

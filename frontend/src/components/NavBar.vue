@@ -26,7 +26,7 @@ const logout = () => {
             <Icon icon="mdi:user" />
             <p class="tip group-hover:scale-100 text-white">Profile</p>
         </router-link>
-        <button @click="logout" class="button w-fit w-min text-3xl flex items-center relative group">
+        <button @click="logout" class="button w-fit text-3xl flex items-center relative group">
             <Icon icon="mdi:logout" />
             <p class="tip group-hover:scale-100 text-white">Exit</p>
         </button>

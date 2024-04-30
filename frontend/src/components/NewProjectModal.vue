@@ -5,6 +5,7 @@ import axios from 'axios'
 
 const emits = defineEmits(['reload'])
 
+const btnLoading = ref(false)
 
 const name = ref('New project')
 const description = ref('New project description')
@@ -43,6 +44,7 @@ const createProject = async ()=>{
         })
         emits('reload')
     } catch (error) {
+        btnLoading.value = false
         console.log(error)
     }
 }
@@ -68,7 +70,7 @@ const createProject = async ()=>{
                 <p>Description:</p>
                 <input v-model="description" type="text" class="text-input">
             </div>
-            <button @click="createProject" class="button">Create project</button>
+            <button @click.once="btnLoading = true; createProject()" class="button flex justify-center"><Icon v-if="btnLoading" icon="line-md:loading-loop" /><p v-else>Create project</p> </button>
         </div>
     </section>
 </template>
