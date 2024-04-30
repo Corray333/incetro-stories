@@ -41,7 +41,10 @@
     bg-gray-700 rounded-full duration-300 hover:bg-green-400 hover:text-gray-900;
   }
   .input_tip{
-    @apply absolute -right-80 w-72 bg-gray-900 p-2 rounded-xl scale-0 duration-300 origin-left;
+    @apply z-20 absolute right-auto bottom-full  w-72 bg-gray-900 p-2 rounded-xl scale-0 duration-300 origin-bottom;
+  }
+  .input_tip_not_mobile{
+    @apply -right-80 bottom-auto origin-left;
   }
   .button.disabled{
     @apply opacity-50;

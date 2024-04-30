@@ -93,7 +93,7 @@ const login = async ()=>{
             <input v-if="action=='Sign up'" v-model="username" class="text-input" type="text" name="" id="" placeholder="username">
             <div class="input_box relative flex items-center group">
                 <input @input="checkEmail" class="text-input" v-model="email" type="text" name="" id="" placeholder="email">
-                <div class="input_tip flex items-center gap-2 group-focus-within:scale-100">
+                <div class="input_tip lg:input_tip_not_mobile flex items-center gap-2 group-focus-within:scale-100">
                     <Icon icon="mdi:bulb" class="text-green-400 text-4xl" />
                     <ul class="list-disc list-inside">
                         <strong>Email must:</strong>
@@ -104,7 +104,7 @@ const login = async ()=>{
             </div>
             <div class="input_box relative flex items-center group">
                 <input @input="checkPassword" class="text-input" v-model="password" type="password" name="" id="" placeholder="password">
-                <div class="input_tip flex items-center gap-2 group-focus-within:scale-100">
+                <div class="input_tip flex lg:input_tip_not_mobile items-center gap-2 group-focus-within:scale-100">
                     <Icon icon="mdi:bulb" class="text-green-400 text-2xl" />
                     <ul class="list-disc list-inside">
                         <strong>Password must:</strong>
