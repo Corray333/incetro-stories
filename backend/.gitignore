@@ -1,6 +1,8 @@
 cmd/main
-go.mod
-go.sum
-.env
 stories-front
-files
+files/images/avatars/*
+!files/images/avatars/default_avatar.png
+files/images/banners/*
+!files/images/banners/no-image.jpg
+files/images/projects/*
+!files/images/projects/no-image.jpg
