@@ -21,7 +21,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./frontend:/app
-      - ../etc/letsencrypt:/etc/letsencrypt
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     ports:
       - "80:80"
       - "443:443"
@@ -42,9 +43,9 @@ services:
   certbot:
     image: certbot/certbot
     volumes:
-      - "/etc/letsencrypt:/etc/letsencrypt"
-      - "/var/lib/letsencrypt:/var/lib/letsencrypt"
-    entrypoint: "/bin/sh -c 'trap exit TERM; certbot certonly --webroot -w /var/www/certbot -d stories.mark-anikin.ru --email mark.corray.off@gmail.com --agree-tos --no-eff-email --force-renewal; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email mark.corray.off@gmail.com -d stories.mark-anikin.com --agree-tos
     restart: always
 
   redis:
