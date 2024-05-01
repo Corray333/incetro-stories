@@ -82,7 +82,7 @@ const createBanner = async () => {
         class="modal-wrapper w-screen h-screen absolute z-50 top-0 left-0 backdrop-blur-sm flex justify-center items-center">
         <section class=" w-3/4 overflow-hidden rounded-xl drop-shadow-xl h-3/4">
 
-            <div class="content bg-white grid grid-cols-1 lg:grid-cols-2 h-full">
+            <div class="content bg-white grid grid-cols-1 lg:grid-cols-2 grid-rows-2 lg:grid-rows-1 h-full">
                 <div class="h-full banner  w-full min-w-full relative text-white flex items-end">
                     <input @input="changed = true" type="file" id="fileInput" class="hidden"
                         @change="handleFileUpload" />

@@ -2,17 +2,18 @@
 version: '3.8'
 services:
   api:
-      build:
-        context: ./backend
-        dockerfile: Dockerfile
-      ports:
-        - 3001:3001
-      command: make run
-      volumes: # Add this section
-        - ./backend:/app # Replace with your Go app's path in the container
-      depends_on:
-        - db
-        - redis
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 3001:3001
+    command: make run
+    volumes: # Add this section
+      - ./backend:/app # Replace with your Go app's path in the container
+    depends_on:
+      - db
+      - redis
+    restart: always
 
   app:
     build:
@@ -20,8 +21,13 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./frontend:/app
+      - ../etc/letsencrypt:/etc/letsencrypt
     ports:
       - "80:80"
+      - "443:443"
+    depends_on:
+      - certbot
+    restart: always
 
   db:
     image: postgres:13
@@ -31,8 +37,18 @@ services:
       POSTGRES_DB: stories
     ports:
       - 5431:5432
+    restart: always
+  
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - "/etc/letsencrypt:/etc/letsencrypt"
+      - "/var/lib/letsencrypt:/var/lib/letsencrypt"
+    entrypoint: "/bin/sh -c 'trap exit TERM; certbot certonly --webroot -w /var/www/certbot -d stories.mark-anikin.ru --email mark.corray.off@gmail.com --agree-tos --no-eff-email --force-renewal; while :; do certbot renew; sleep 12h & wait $${!}; done'"
+    restart: always
 
   redis:
     image: redis:latest
     ports:
       - 6379:6379
+    restart: always

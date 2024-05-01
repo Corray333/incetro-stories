@@ -43,7 +43,7 @@ func (s *UserStorage) InsertUser(user types.User, agent string) (int, string, er
 
 	rows := tx.QueryRow(`
 		INSERT INTO users (username, email, password, avatar) VALUES ($1, $2, $3, $4) RETURNING user_id;
-	`, user.Username, user.Email, user.Password, "images/avatars/default_avatar.png")
+	`, user.Username, user.Email, user.Password, "api/images/avatars/default_avatar.png")
 
 	if err := rows.Scan(&user.ID); err != nil {
 		return -1, "", err
