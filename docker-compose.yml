@@ -26,8 +26,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    depends_on:
-      - certbot
     restart: always
 
   db:
@@ -45,8 +43,7 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email mark.corray.off@gmail.com -d stories.mark-anikin.com --agree-tos
-    restart: always
+    command: certonly --webroot -w /var/www/certbot --keep-until-expiring --email mark.corray.off@gmail.com -d jopa.mark-anikin.com --agree-tos
 
   redis:
     image: redis:latest
