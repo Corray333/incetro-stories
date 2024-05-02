@@ -78,7 +78,7 @@ const saveChanges = async () => {
 <template>
     <section class="flex flex-col gap-5 items-center">
         <h1 class="title">Profile</h1>
-        <div class="profile_card flex flex-col md:flex-row md:items-center gap-5 bg-gray-900 rounded-xl p-5">
+        <div class="profile_card flex flex-col md:flex-row items-center gap-5 bg-gray-900 rounded-xl p-5">
             <div class="profile_photo relative">
                 <input @input="changed = true" type="file" id="fileInput" class="hidden" @change="handleFileUpload" />
                 <label for="fileInput"
@@ -90,7 +90,7 @@ const saveChanges = async () => {
             </div>
             <div class="profile_info flex flex-col gap-2">
                 <input @input="changed = true" type="text" v-model="user.username" class="text-input">
-                <input @input="changed = true" type="text" v-model="user.email" class="text-input" disabled>
+                <input @input="changed = true" type="text" v-model="user.email" class="text-input opacity-75" disabled>
                 <button @click="saveChanges" class="button" :class="changed ? '' : 'disabled'">Save</button>
             </div>
         </div>

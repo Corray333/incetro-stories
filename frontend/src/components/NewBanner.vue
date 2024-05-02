@@ -90,7 +90,7 @@ const createBanner = async () => {
                         class="text-center absolute mx-auto bg-gray-900 bg-opacity-80 h-full w-full flex items-center justify-center text-5xl text-green-400 opacity-0 duration-300 cursor-pointe hover:opacity-100">
                         <Icon icon="mdi:camera" />
                     </label>
-                    <img :src="file ? newPhotoUrl : '/images/banners/no-image.jpg'" alt=""
+                    <img :src="file ? newPhotoUrl : '/api/images/banners/no-image.jpg'" alt=""
                         class="w-full h-full object-contain duration-300 bg-black">
                 </div>
                 <div class="story_info w-full flex p-5 gap-5 overflow-y-auto relative">
@@ -104,7 +104,7 @@ const createBanner = async () => {
                             </button>
                             <Transition>
                                 <div v-if="showLangs"
-                                    class="dropdown-content flex flex-col gap-2 absolute -left-2 bg-gray-900 p-2 border-white border-2 rounded-lg">
+                                    class="dropdown-content w-full flex flex-col gap-2 absolute left-0 bg-gray-900 p-2 border-white border-2 rounded-lg">
                                     <LangPicker :langs="langs" :selected_lang="selected_lang"
                                         @closeLangs="showLangs = false" @selectLang="lang => selected_lang = lang" />
                                 </div>
