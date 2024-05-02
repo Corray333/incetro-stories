@@ -99,7 +99,7 @@ const handleFileUpload = (event) => {
 
 <template>
     <div @click.self="$emit('close')"
-        class="modal-wrapper w-screen h-screen absolute z-50 top-0 left-0 backdrop-blur-sm flex justify-center items-center">
+        class="modal-wrapper w-screen h-screen fixed z-50 top-0 left-0 backdrop-blur-sm flex justify-center items-center">
         <section class=" w-3/4 overflow-hidden rounded-xl drop-shadow-xl h-3/4">
 
             <div class="content bg-white grid grid-cols-1 lg:grid-cols-2 h-full">
@@ -140,7 +140,7 @@ const handleFileUpload = (event) => {
                     <div class="w-full h-full flex flex-col rounded-xl">
                         <i class="opacity-50 text-xs">Creator: {{ user.username }}</i>
                         <i class="opacity-50 text-xs">Created at:{{ new Date(story.created_at * 1000) }}</i>
-                        <span class="flex gap-2 items-center">
+                        <span class=" gap-2 items-center">
                             <i class="opacity-50 text-xs">Expires at:</i>
                             <div class="w-fit">
                                 <VueDatePicker v-model="expires_at" class=""/>

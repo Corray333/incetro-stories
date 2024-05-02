@@ -8,7 +8,6 @@ function getCookie(name) {
 
 const refreshTokens = async () => {
     try {
-        console.log(localStorage.getItem('Refresh'))
         let { data } = await axios.get( `/api/users/refresh`, {
             headers: {
                 'Refresh': localStorage.getItem('Refresh'),

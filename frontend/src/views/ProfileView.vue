@@ -78,7 +78,7 @@ const saveChanges = async () => {
 <template>
     <section class="flex flex-col gap-5 items-center">
         <h1 class="title">Profile</h1>
-        <div class="profile_card flex flex-col md:flex-row gap-5 bg-gray-900 rounded-xl p-5">
+        <div class="profile_card flex flex-col md:flex-row md:items-center gap-5 bg-gray-900 rounded-xl p-5">
             <div class="profile_photo relative">
                 <input @input="changed = true" type="file" id="fileInput" class="hidden" @change="handleFileUpload" />
                 <label for="fileInput"

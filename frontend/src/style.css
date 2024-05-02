@@ -27,7 +27,7 @@
 
 @layer components {
   .text-input {
-    @apply p-2 bg-white rounded-md text-black w-72;
+    @apply p-2 bg-white hidden sm:block rounded-md text-black w-72;
   }
   .button {
     @apply rounded-md bg-gray-700 text-white p-2 w-full
