@@ -137,9 +137,8 @@ const handleFileUpload = (event) => {
                     </div>
                 </div>
                 <div class="story_info w-full flex p-5 gap-5 overflow-y-auto relative">
-                    <img :src="user.avatar" alt="" class="w-16 h-16 object-cover rounded-full">
                     <div class="w-full h-full flex flex-col rounded-xl">
-                        <i class="opacity-50 text-xs">{{ user.username }}</i>
+                        <i class="opacity-50 text-xs">Creator: {{ user.username }}</i>
                         <i class="opacity-50 text-xs">Created at:{{ new Date(story.created_at * 1000) }}</i>
                         <span class="flex gap-2 items-center">
                             <i class="opacity-50 text-xs">Expires at:</i>
