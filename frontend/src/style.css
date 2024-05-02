@@ -27,7 +27,7 @@
 
 @layer components {
   .text-input {
-    @apply p-2 bg-white hidden sm:block rounded-md text-black w-72;
+    @apply p-2 bg-white flex rounded-md text-black w-72;
   }
   .button {
     @apply rounded-md bg-gray-700 text-white p-2 w-full
@@ -52,7 +52,7 @@
   }
 
   .tip{
-    @apply absolute left-full ml-2 z-30 bg-gray-900 p-2 w-fit rounded-xl scale-0 duration-300 text-lg origin-left;
+    @apply absolute hidden sm:block left-full ml-2 z-30 bg-gray-900 p-2 w-fit rounded-xl scale-0 duration-300 text-lg origin-left;
   }
 }
 
