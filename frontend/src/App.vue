@@ -5,7 +5,7 @@ import { refreshTokens } from './utils/helpers'
 
 
 onBeforeMount(()=>{
-  if (!localStorage.getItem('Refresh')){
+  if (localStorage.getItem('Refresh') != null){
     refreshTokens()
   }
 })
