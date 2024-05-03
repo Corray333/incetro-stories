@@ -2,29 +2,21 @@ package storage
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/Corray333/univer_cs/internal/domains/user/types"
 	"github.com/Corray333/univer_cs/pkg/server/auth"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/redis/go-redis/v9"
 )
 
 type UserStorage struct {
-	db    *sqlx.DB
-	redis *redis.Client
+	db *sqlx.DB
 }
 
 // New creates a new storage and tables
 func NewStorage(db *sqlx.DB) *UserStorage {
 	return &UserStorage{
 		db: db,
-		redis: redis.NewClient(&redis.Options{
-			Addr:     os.Getenv("REDIS_ADDR"),
-			Password: os.Getenv("REDIS_PASSWORD"),
-			DB:       0,
-		}),
 	}
 }
 
@@ -36,7 +28,7 @@ func (s *UserStorage) InsertUser(user types.User, agent string) (int, string, er
 	}
 	user.Password = passHash
 
-	tx, err := s.db.Begin()
+	tx, err := s.db.Beginx()
 	if err != nil {
 		return -1, "", err
 	}
@@ -54,17 +46,12 @@ func (s *UserStorage) InsertUser(user types.User, agent string) (int, string, er
 		return -1, "", err
 	}
 
-	if err := s.SetRefreshToken(user.ID, agent, refresh); err != nil {
-		tx.Rollback()
+	_, err = tx.Queryx(`
+		INSERT INTO user_token (user_id, user_agent, token) VALUES ($1, $2, $3);
+	`, user.ID, agent, refresh)
+	if err != nil {
 		return -1, "", err
 	}
-
-	// _, err = s.db.Queryx(`
-	// 	INSERT INTO user_token (user_id, token) VALUES ($1, $2);
-	// `, user.ID, refresh)
-	// if err != nil {
-	// 	return -1, "", err
-	// }
 
 	tx.Commit()
 
@@ -97,21 +84,57 @@ func (s *UserStorage) LoginUser(user types.User, agent string) (int, string, err
 		return -1, "", err
 	}
 
-	if err := s.SetRefreshToken(user.ID, agent, refresh); err != nil {
-		tx.Rollback()
+	_, err = tx.Queryx(`
+		INSERT INTO user_token (user_id, user_agent, token) VALUES ($1, $2, $3) ON CONFLICT (user_id, user_agent) DO UPDATE SET token = $4;
+	`, user.ID, agent, refresh, refresh)
+	if err != nil {
 		return -1, "", err
 	}
-
-	// _, err = tx.Queryx(`
-	// 	INSERT INTO user_token (user_id, token) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET token = $3;
-	// `, user.ID, refresh, refresh)
-	// if err != nil {
-	// 	return -1, "", err
-	// }
 
 	tx.Commit()
 
 	return user.ID, refresh, nil
+}
+
+// RefreshToken checks if the refresh token is valid and returns a new pair of tokens
+func (s *UserStorage) RefreshToken(id int, agent, oldRefresh string) (string, string, error) {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return "", "", err
+	}
+
+	rows := tx.QueryRow(`
+		SELECT token FROM user_token WHERE user_id = $1 AND user_agent = $2;
+	`, id, agent)
+
+	var refresh string
+	if err := rows.Scan(&refresh); err != nil {
+		return "", "", err
+	}
+	if refresh != oldRefresh {
+		return "", "", fmt.Errorf("invalid refresh token")
+	}
+
+	newRefresh, err := auth.CreateToken(id, auth.RefreshTokenLifeTime)
+	if err != nil {
+		return "", "", err
+	}
+
+	newAccess, err := auth.CreateToken(id, auth.AccessTokenLifeTime)
+	if err != nil {
+		return "", "", err
+	}
+
+	_, err = tx.Queryx(`
+		UPDATE user_token SET token = $1 WHERE user_id = $2 AND user_agent = $3;
+	`, newRefresh, id, agent)
+	if err != nil {
+		return "", "", err
+	}
+
+	tx.Commit()
+
+	return newAccess, newRefresh, nil
 }
 
 func (s *UserStorage) SelectUser(id string) (types.User, error) {

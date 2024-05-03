@@ -5,34 +5,39 @@ import axios from 'axios'
 
 const emits = defineEmits(['reload'])
 
+const MaxFileSize = 5 * 1024 * 1024
+
 const btnLoading = ref(false)
 
-const name = ref('New project')
-const description = ref('New project description')
-const cover = ref("https://via.placeholder.com/150")
+const props = defineProps(['project'])
+
 
 const file = ref(null)
 
 const handleFileUpload = (event) => {
-    if (event.target.files[0].size > 5000*1024) {
+    if (event.target.files[0].size > MaxFileSize) {
         alert('File is too big')
         return
     }
-    file.value = event.target.files[0]
+    props.project.file = event.target.files[0]
     const reader = new FileReader()
 
     reader.onload = (e) => {
-        cover.value = e.target.result
+        props.project.cover = e.target.result
     }
     reader.readAsDataURL(event.target.files[0])
 }
 
 const createProject = async ()=>{
+    if (!props.project.name || !props.project.description || !props.project.file) {
+        alert('Please fill in all fields')
+        return
+    }
     const formData = new FormData()
-    if (file.value != null) formData.append('cover', file.value)
+    formData.append('cover', props.project.file)
     formData.append('data', JSON.stringify({
-        name: name.value,
-        description: description.value
+        name: props.project.name,
+        description: props.project.description
     }))
 
     try{
@@ -59,16 +64,16 @@ const createProject = async ()=>{
                 class="text-center absolute mx-auto bg-gray-900 bg-opacity-80 h-full w-full rounded-full flex items-center justify-center text-5xl text-green-400 opacity-0 duration-300 cursor-pointer border-green-400 border-8 hover:opacity-100">
                 <Icon icon="mdi:user" />
             </label>
-            <img :src="cover" alt="photo" class="w-48 h-48 rounded-full object-cover border-white border-8">
+            <img :src="project.cover" alt="photo" class="w-48 h-48 rounded-full object-cover border-white border-8">
         </div>
         <div class="info flex flex-col gap-2">
             <div>
                 <p>Name:</p>
-                <input v-model="name" type="text" class="text-input">
+                <input v-model="project.name" type="text" class="text-input">
             </div>
             <div>
                 <p>Description:</p>
-                <input v-model="description" type="text" class="text-input">
+                <input v-model="project.description" type="text" class="text-input">
             </div>
             <button @click.once="btnLoading = true; createProject()" class="button flex justify-center"><Icon v-if="btnLoading" icon="line-md:loading-loop" /><p v-else>Create project</p> </button>
         </div>

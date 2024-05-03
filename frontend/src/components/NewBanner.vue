@@ -6,30 +6,23 @@ import LangPicker from './LangPicker.vue'
 import { refreshTokens } from '../utils/helpers'
 
 const btnLoading = ref(false)
+const MaxFileSize = 5 * 1024 * 1024
 
 const emit = defineEmits(['close', 'reload'])
 
-const props = defineProps(['story_id', 'project_id'])
+const props = defineProps(['story_id', 'project_id', 'newBanner'])
 
-const file = ref(null)
-const fileMsg = ref("Upload file")
-const newPhotoUrl = ref(null)
+
+const selected_lang = ref("en")
+
 
 
 const showLangs = ref(false)
 
 
-const selected_lang = ref("eng")
-const langs = ref([
-    {
-        lang: "eng",
-        title: "",
-        description: ""
-    }
-])
 
 const selected_lang_id = computed(() => {
-    return langs.value.findIndex(lang => {
+    return props.newBanner.langs.findIndex(lang => {
         return lang.lang == selected_lang.value
     })
 })
@@ -37,24 +30,29 @@ const selected_lang_id = computed(() => {
 
 
 const handleFileUpload = (event) => {
-    if (event.target.files[0].size > 5000 * 1024) {
-        fileMsg.value = "File is too large"
+    // max file size is 5MB
+    if (event.target.files[0].size > MaxFileSize) {
+        alert('File size is too big')
         return
     }
-    file.value = event.target.files[0]
+    props.newBanner.file = event.target.files[0]
     const reader = new FileReader()
 
     reader.onload = (e) => {
-        newPhotoUrl.value = e.target.result
+        props.newBanner.newPhotoUrl = e.target.result
     }
     reader.readAsDataURL(event.target.files[0])
 }
 
 
 const createBanner = async () => {
+    if (!props.newBanner.langs[selected_lang_id.value].title || !props.newBanner.langs[selected_lang_id.value].description || !props.newBanner.file) {
+        alert('Please fill in all fields')
+        return
+    }
     const formData = new FormData()
-    formData.append('file', file.value)
-    formData.append('langs', JSON.stringify(langs.value))
+    formData.append('file', props.newBanner.file)
+    formData.append('langs', JSON.stringify(props.newBanner.langs))
     try {
         let url =  `/api/projects/${props.project_id}/banners`
         if (props.story_id) url += `?story_id=${props.story_id}`
@@ -90,7 +88,7 @@ const createBanner = async () => {
                         class="text-center absolute mx-auto bg-gray-900 bg-opacity-80 h-full w-full flex items-center justify-center text-5xl text-green-400 opacity-0 duration-300 cursor-pointe hover:opacity-100">
                         <Icon icon="mdi:camera" />
                     </label>
-                    <img :src="file ? newPhotoUrl : '/api/images/banners/no-image.jpg'" alt=""
+                    <img :src="newBanner.file ? newBanner.newPhotoUrl : '/api/images/banners/no-image.jpg'" alt=""
                         class="w-full h-full object-contain duration-300 bg-black">
                 </div>
                 <div class="story_info w-full flex p-5 gap-5 overflow-y-auto relative">
@@ -105,17 +103,17 @@ const createBanner = async () => {
                             <Transition>
                                 <div v-if="showLangs"
                                     class="dropdown-content w-full flex flex-col gap-2 absolute left-0 bg-gray-900 p-2 border-white border-2 rounded-lg">
-                                    <LangPicker :langs="langs" :selected_lang="selected_lang"
+                                    <LangPicker :langs="newBanner.langs" :selected_lang="selected_lang"
                                         @closeLangs="showLangs = false" @selectLang="lang => selected_lang = lang" />
                                 </div>
                             </Transition>
                         </div>
                         <h2 class=" font-semibold">Title:</h2>
                         <input class=" bg-slate-100 p-2 rounded-md"
-                            v-model="langs[selected_lang_id].title" placeholder="Title">
+                            v-model="newBanner.langs[selected_lang_id].title" placeholder="Title">
                         <h2 class=" font-semibold">Description:</h2>
                         <textarea class="text-input text-black w-full bg-slate-100 p-2 rounded-md" rows="20"
-                            v-model="langs[selected_lang_id].description"
+                            v-model="newBanner.langs[selected_lang_id].description"
                             placeholder="Description"></textarea>
                         <button class="button absolute bottom-0 flex justify-center right-0 m-5 w-fit px-5"
                             @click.once="btnLoading = true; createBanner(current)"><Icon v-if="btnLoading" icon="line-md:loading-loop" /><p v-else>Create banner</p></button>

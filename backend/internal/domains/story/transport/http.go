@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const MaxFileSize = 64 << 20
+const MaxFileSize = 5 << 20
 
 type Storage interface {
 	SelectStories(project_id, story_id, banner_id, creator, offset, lang string) ([]types.Story, error)
@@ -53,7 +53,7 @@ func NewBanner(store Storage) http.HandlerFunc {
 		story_id := r.URL.Query().Get("story_id")
 		project_id := chi.URLParam(r, "project_id")
 		// Limit max input length
-		if err := r.ParseMultipartForm(64 << 20); err != nil {
+		if err := r.ParseMultipartForm(MaxFileSize); err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Failed to read file", http.StatusBadRequest)
 		}

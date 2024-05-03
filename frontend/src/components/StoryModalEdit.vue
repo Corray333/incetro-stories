@@ -30,7 +30,7 @@ const user = ref({})
 const loadUserInfo = async () => {
     try {
         let uid = props.story.creator
-        let { data } = await axios.get( `/api/users/${uid}`, {
+        let { data } = await axios.get(`/api/users/${uid}`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -59,7 +59,7 @@ const updateBanner = async (id) => {
     formData.append('banner', JSON.stringify(props.story.banners[id]))
 
     try {
-        await axios.put( `/api/banners`,
+        await axios.put(`/api/banners`,
             formData, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
@@ -143,7 +143,7 @@ const handleFileUpload = (event) => {
                         <span class=" gap-2 items-center">
                             <i class="opacity-50 text-xs">Expires at:</i>
                             <div class="w-fit">
-                                <VueDatePicker v-model="expires_at" class=""/>
+                                <VueDatePicker v-model="expires_at"/>
                             </div>
                         </span>
                         <div class="dropdown relative w-full">

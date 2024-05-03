@@ -7,7 +7,7 @@ import StoryModalEdit from '../components/StoryModalEdit.vue'
 import { jwtDecode } from "jwt-decode"
 import axios from 'axios'
 import { useRoute } from 'vue-router'
-import {  refreshTokens } from '../utils/helpers'
+import { refreshTokens } from '../utils/helpers'
 
 const route = useRoute()
 const project_id = route.params.project_id
@@ -26,7 +26,17 @@ const pickStory = (id) => {
     newBannerOpened.value = true
 }
 
-
+const newBanner = ref({
+    langs: [
+        {
+            lang: "en",
+            title: "",
+            description: ""
+        }
+    ],
+    file: null,
+    newPhotoUrl: null,
+})
 
 const stories = ref([])
 const projects = ref([])
@@ -34,7 +44,7 @@ const projects = ref([])
 
 const loadContent = async () => {
     try {
-        let { data } = await axios.get( `/api/projects/${project_id}/stories`, {
+        let { data } = await axios.get(`/api/projects/${project_id}/stories`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -52,7 +62,7 @@ const loadContent = async () => {
 
 const loadProject = async () => {
     try {
-        let { data } = await axios.get( `/api/projects/${project_id}`, {
+        let { data } = await axios.get(`/api/projects/${project_id}`, {
             headers: {
                 'Authorization': localStorage.getItem('Authorization'),
             }
@@ -81,10 +91,12 @@ onBeforeMount(() => {
 <template>
     <section class="flex flex-col gap-5">
         <transition>
-            <StoryModalEdit v-if="storyPick" :story="storyPick" :project_id="project_id" @reload="loadContent; storyPick=null" @close="storyPick = null" />
+            <StoryModalEdit v-if="storyPick" :story="storyPick" :project_id="project_id"
+                @reload="loadContent; storyPick = null" @close="storyPick = null" />
         </transition>
         <Transition>
-            <NewBanner v-if="newBannerOpened" :story_id="storyId" :project_id="project_id" @close="closeNewBanner" @reload="loadContent" />
+            <NewBanner v-if="newBannerOpened" :story_id="storyId" :project_id="project_id" :newBanner="newBanner" @close="closeNewBanner"
+                @reload="loadContent" />
         </Transition>
         <div class="header w-full flex gap-2 justify-center text-gray-900 relative items-center">
             <img :src="projects[0]?.cover" alt="" class=" w-12 h-12 object-cover rounded-full">

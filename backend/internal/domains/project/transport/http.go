@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const MaxFileSize = 64 << 20
+const MaxFileSize = 5 << 20
 
 type Storage interface {
 	InsertProject(uid int, cover multipart.File, project types.Project) error
@@ -20,6 +20,11 @@ type Storage interface {
 
 func NewProject(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseMultipartForm(MaxFileSize); err != nil {
+			http.Error(w, "Failed to read file", http.StatusBadRequest)
+			slog.Error("Failed to read file: " + err.Error())
+			return
+		}
 		cover, _, err := r.FormFile("cover")
 		if err != nil {
 			http.Error(w, "Failed to read cover", http.StatusBadRequest)
