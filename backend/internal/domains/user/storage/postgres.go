@@ -62,11 +62,6 @@ func (s *UserStorage) InsertUser(user types.User, agent string) (int, string, er
 func (s *UserStorage) LoginUser(user types.User, agent string) (int, string, error) {
 	password := user.Password
 
-	tx, err := s.db.Beginx()
-	if err != nil {
-		return -1, "", err
-	}
-
 	rows := s.db.QueryRow(`
 		SELECT user_id, password FROM users WHERE email = $1;
 	`, user.Email)
@@ -84,14 +79,12 @@ func (s *UserStorage) LoginUser(user types.User, agent string) (int, string, err
 		return -1, "", err
 	}
 
-	_, err = tx.Queryx(`
-		INSERT INTO user_token (user_id, user_agent, token) VALUES ($1, $2, $3) ON CONFLICT (user_id, user_agent) DO UPDATE SET token = $4;
+	_, err = s.db.Queryx(`
+		INSERT INTO user_token (user_id, user_agent, token) VALUES ($1, $2, $3) ON CONFLICT (user_id, user_agent, token) DO UPDATE SET token = $4;
 	`, user.ID, agent, refresh, refresh)
 	if err != nil {
 		return -1, "", err
 	}
-
-	tx.Commit()
 
 	return user.ID, refresh, nil
 }
