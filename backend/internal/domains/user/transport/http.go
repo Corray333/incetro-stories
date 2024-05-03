@@ -69,7 +69,7 @@ func SignUp(store *storage.UserStorage) http.HandlerFunc {
 }
 
 // LogIn logs in the user and sends back refresh token, access token and user info
-func LogIn(store *storage.UserStorage) http.HandlerFunc {
+func LogIn(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := types.User{}
 		body, err := io.ReadAll(r.Body)

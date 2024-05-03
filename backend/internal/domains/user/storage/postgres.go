@@ -67,7 +67,7 @@ func (s *UserStorage) LoginUser(user types.User, agent string) (int, string, err
 		return -1, "", err
 	}
 
-	rows := tx.QueryRow(`
+	rows := s.db.QueryRow(`
 		SELECT user_id, password FROM users WHERE email = $1;
 	`, user.Email)
 
