@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/Corray333/univer_cs/internal/domains/story/types"
 	"github.com/Masterminds/squirrel"
@@ -110,7 +111,7 @@ func (s *Storage) InsertBanner(project_id string, storyId string, uid int, banne
 }
 
 // SelectStories returns all the stories from the database
-func (s *Storage) SelectStories(project_id, story_id, banner_id, creator, offset, lang string) ([]types.Story, error) {
+func (s *Storage) SelectStories(project_id, story_id, banner_id, creator, offset, lang, all string) ([]types.Story, error) {
 	var stories []types.Story
 	type row struct {
 		StoriesID       int    `db:"story_id"`
@@ -147,8 +148,15 @@ func (s *Storage) SelectStories(project_id, story_id, banner_id, creator, offset
 		Join("banners on banners.banner_id = story_banner.banner_id ").
 		Join("stories ON stories.story_id = story_banner.story_id").
 		Join("banner_lang ON banner_lang.banner_id = banners.banner_id").
-		Where(where).OrderBy("stories.story_id", "banners.banner_id").Offset(uint64(off))
-	sql, args, _ := query.PlaceholderFormat(squirrel.Dollar).ToSql()
+		Where(where)
+	if all == "" {
+		query = query.Where("expires_at > ?", time.Now().Unix())
+	}
+	sql, args, _ := query.OrderBy("stories.story_id", "banners.banner_id").Offset(uint64(off)).PlaceholderFormat(squirrel.Dollar).ToSql()
+
+	fmt.Println()
+	fmt.Println(sql)
+	fmt.Println()
 
 	rows, err := s.db.Queryx(sql, args...)
 	if err != nil {

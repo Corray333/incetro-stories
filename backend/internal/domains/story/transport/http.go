@@ -16,12 +16,31 @@ import (
 const MaxFileSize = 5 << 20
 
 type Storage interface {
-	SelectStories(project_id, story_id, banner_id, creator, offset, lang string) ([]types.Story, error)
+	SelectStories(project_id, story_id, banner_id, creator, offset, lang, all string) ([]types.Story, error)
 	InsertBanner(project_id string, story_id string, uid int, banner types.Banner, file multipart.File, fileName string) error
 	InsertView(user_id int, banner_id string) error
 	UpdateBanner(banner types.Banner, expires_at string, file multipart.File, fileName string) error
 }
 
+type GetStoriesResponse struct {
+	Stories []types.Story `json:"stories"`
+}
+
+// GetStories godoc
+// @Summary Get stories
+// @Description Get stories by project ID
+// @Tags stories
+// @Produce json
+// @Param project_id path string true "Project ID"
+// @Param story_id query string false "Story ID"
+// @Param banner_id query string false "Banner ID"
+// @Param creator query string false "Creator"
+// @Param offset query string false "Offset"
+// @Param lang query string false "Language"
+// @Param all query string false "All"
+// @Success 200 {object} GetStoriesResponse "Stories"
+// @Failure 500 {string} string "Failed to get stories"
+// @Router /api/projects/{project_id}/stories [get]
 func GetStories(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		project_id := chi.URLParam(r, "project_id")
@@ -30,29 +49,39 @@ func GetStories(store Storage) http.HandlerFunc {
 		creator := r.URL.Query().Get("creator")
 		offset := r.URL.Query().Get("offset")
 		lang := r.URL.Query().Get("lang")
+		all := r.URL.Query().Get("all")
 
-		stories, err := store.SelectStories(project_id, story_id, banner_id, creator, offset, lang)
+		stories, err := store.SelectStories(project_id, story_id, banner_id, creator, offset, lang, all)
 		if err != nil {
 			http.Error(w, "Failed to get stories", http.StatusInternalServerError)
 			slog.Error("Failed to get stories: " + err.Error())
 			return
 		}
-		if err := json.NewEncoder(w).Encode(struct {
-			Stories []types.Story `json:"stories"`
-		}{Stories: stories}); err != nil {
-			http.Error(w, "Failed to  response", http.StatusInternalServerError)
-			slog.Error("Failed to  response: " + err.Error())
+		if err := json.NewEncoder(w).Encode(GetStoriesResponse{Stories: stories}); err != nil {
+			http.Error(w, "Failed to response", http.StatusInternalServerError)
+			slog.Error("Failed to response: " + err.Error())
 			return
 		}
 	}
 }
 
-// NewBanner creates a new banner in the database and saves the image
+// NewBanner godoc
+// @Summary Create a new banner
+// @Description Create a new banner and save the image
+// @Tags banners
+// @Accept multipart/form-data
+// @Param project_id path string true "Project ID"
+// @Param story_id query string true "Story ID"
+// @Param file formData file true "File"
+// @Param langs formData string true "Langs"
+// @Success 201 {string} string "Created"
+// @Failure 400 {string} string "Failed to read file"
+// @Failure 500 {string} string "Failed to unmarshal banner"
+// @Router /api/projects/{project_id}/banners [post]
 func NewBanner(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		story_id := r.URL.Query().Get("story_id")
 		project_id := chi.URLParam(r, "project_id")
-		// Limit max input length
 		if err := r.ParseMultipartForm(MaxFileSize); err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Failed to read file", http.StatusBadRequest)
@@ -66,9 +95,7 @@ func NewBanner(store Storage) http.HandlerFunc {
 
 		var langs []types.BannerLang
 
-		// Unmarshal the banner
 		langsRaw := r.FormValue("langs")
-
 		if err := json.Unmarshal([]byte(langsRaw), &langs); err != nil {
 			http.Error(w, "Failed to unmarshal banner", http.StatusInternalServerError)
 			slog.Error("Failed to unmarshal banner: " + err.Error())
@@ -76,7 +103,6 @@ func NewBanner(store Storage) http.HandlerFunc {
 		}
 
 		banner := types.Banner{Langs: langs}
-
 		creds, err := auth.ExtractCredentials(r.Header.Get("Authorization"))
 		if err != nil {
 			http.Error(w, "Failed to get user id", http.StatusInternalServerError)
@@ -94,6 +120,16 @@ func NewBanner(store Storage) http.HandlerFunc {
 	}
 }
 
+// NewView godoc
+// @Summary Create a new view
+// @Description Create a new view for a banner
+// @Tags views
+// @Accept json
+// @Param Authorization header string true "Bearer token"
+// @Param banner_id body int true "Banner ID"
+// @Success 200 {string} string "Created"
+// @Failure 500 {string} string "Failed to insert view"
+// @Router /api/views [post]
 func NewView(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
@@ -127,6 +163,18 @@ func NewView(store Storage) http.HandlerFunc {
 	}
 }
 
+// UpdateBanner godoc
+// @Summary Update a banner
+// @Description Update a banner with new data and optionally a new file
+// @Tags banners
+// @Accept multipart/form-data
+// @Param banner formData string true "Banner data"
+// @Param expires_at formData string false "Expiration date"
+// @Param file formData file false "File"
+// @Success 200 {string} string "Updated"
+// @Failure 400 {string} string "Failed to read file"
+// @Failure 500 {string} string "Failed to update banner"
+// @Router /api/banners [put]
 func UpdateBanner(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body := r.FormValue("banner")

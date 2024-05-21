@@ -1,0 +1,204 @@
+definitions:
+  transport.GetStoriesResponse:
+    properties:
+      stories:
+        items:
+          $ref: '#/definitions/types.Story'
+        type: array
+    type: object
+  types.Banner:
+    properties:
+      created_at:
+        type: integer
+      id:
+        type: integer
+      langs:
+        items:
+          $ref: '#/definitions/types.BannerLang'
+        type: array
+      media_url:
+        type: string
+      views:
+        type: integer
+    type: object
+  types.BannerLang:
+    properties:
+      description:
+        type: string
+      lang:
+        type: string
+      title:
+        type: string
+    type: object
+  types.Story:
+    properties:
+      banners:
+        items:
+          $ref: '#/definitions/types.Banner'
+        type: array
+      created_at:
+        type: integer
+      creator:
+        type: integer
+      expires_at:
+        type: integer
+      id:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /api/banners:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update a banner with new data and optionally a new file
+      parameters:
+      - description: Banner data
+        in: formData
+        name: banner
+        required: true
+        type: string
+      - description: Expiration date
+        in: formData
+        name: expires_at
+        type: string
+      - description: File
+        in: formData
+        name: file
+        type: file
+      responses:
+        "200":
+          description: Updated
+          schema:
+            type: string
+        "400":
+          description: Failed to read file
+          schema:
+            type: string
+        "500":
+          description: Failed to update banner
+          schema:
+            type: string
+      summary: Update a banner
+      tags:
+      - banners
+  /api/projects/{project_id}/banners:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new banner and save the image
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Story ID
+        in: query
+        name: story_id
+        required: true
+        type: string
+      - description: File
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Langs
+        in: formData
+        name: langs
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Failed to read file
+          schema:
+            type: string
+        "500":
+          description: Failed to unmarshal banner
+          schema:
+            type: string
+      summary: Create a new banner
+      tags:
+      - banners
+  /api/projects/{project_id}/stories:
+    get:
+      description: Get stories by project ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: string
+      - description: Story ID
+        in: query
+        name: story_id
+        type: string
+      - description: Banner ID
+        in: query
+        name: banner_id
+        type: string
+      - description: Creator
+        in: query
+        name: creator
+        type: string
+      - description: Offset
+        in: query
+        name: offset
+        type: string
+      - description: Language
+        in: query
+        name: lang
+        type: string
+      - description: All
+        in: query
+        name: all
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stories
+          schema:
+            $ref: '#/definitions/transport.GetStoriesResponse'
+        "500":
+          description: Failed to get stories
+          schema:
+            type: string
+      summary: Get stories
+      tags:
+      - stories
+  /api/views:
+    post:
+      consumes:
+      - application/json
+      description: Create a new view for a banner
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Banner ID
+        in: body
+        name: banner_id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Created
+          schema:
+            type: string
+        "500":
+          description: Failed to insert view
+          schema:
+            type: string
+      summary: Create a new view
+      tags:
+      - views
+swagger: "2.0"

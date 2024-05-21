@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/Corray333/univer_cs/docs"
 	"github.com/Corray333/univer_cs/internal/config"
 	"github.com/Corray333/univer_cs/internal/domains/project"
 	"github.com/Corray333/univer_cs/internal/domains/story"
@@ -15,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/jmoiron/sqlx"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type App struct {
@@ -55,6 +57,10 @@ func NewApp(cfg *config.Config) *App {
 		slog.Error(err.Error())
 		panic(err)
 	}
+
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"), // The url pointing to API definition
+	))
 
 	return &App{
 		db: db,
